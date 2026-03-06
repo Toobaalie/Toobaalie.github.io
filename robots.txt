@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /data/
+Disallow: /node_modules/
+
+Sitemap: https://berrybabes.me/sitemap.xml

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Scrunchie Product Details | BerryBabes.me</title>
+  <meta name="description" content="View scrunchie details, colors, and reviews. Find your perfect silk, satin, velvet, or cotton scrunchie at BerryBabes.me." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://berrybabes.me/product.html" />
+  <meta property="og:type" content="product" />
+  <meta property="og:title" content="Scrunchie Product Details | BerryBabes.me" />
+  <meta property="og:description" content="Explore colors and styles for your next favorite scrunchie." />
+  <meta property="og:url" content="https://berrybabes.me/product.html" />
+  <meta property="og:image" content="https://berrybabes.me/images/1.jpeg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Scrunchie Product Details | BerryBabes.me" />
+  <meta name="twitter:description" content="Explore colors and styles for your next favorite scrunchie." />
+  <meta name="twitter:image" content="https://berrybabes.me/images/1.jpeg" />
+  <link rel="icon" type="image/png" href="images/img4.png" />
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+
+  <div class="announcement-bar">
+    Free shipping on orders over 3000 &mdash; Use code <strong>SCRUNCHIE15</strong>
+  </div>
+
+  <header class="header product-header" id="header">
+    <div class="container header__inner">
+      <a href="index.html" class="logo">
+        <div class="logo__icon">B</div>
+        <div class="logo__text">
+          <span class="logo__name">Berry</span>
+          <span class="logo__sub">Babes.pk</span>
+        </div>
+      </a>
+
+      <div class="header__actions">
+        <a href="cart.html#cartWishlistSection" class="cart-btn wishlist-btn" aria-label="Wishlist items">
+          <i class="fas fa-heart"></i>
+          <span class="cart-badge wishlist-badge" id="wishlistBadge">0</span>
+        </a>
+        <a href="cart.html" class="cart-btn" aria-label="Cart items">
+          <i class="fas fa-shopping-bag"></i>
+          <span class="cart-badge" id="cartBadge">0</span>
+        </a>
+        <a href="index.html#products" class="btn btn--primary product-back-btn">Back to Products</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="product-page section">
+    <div class="container">
+      <div class="product-detail" id="productDetail"></div>
+
+      <section class="reviews" id="reviewsSection">
+        <div class="section__header reviews__header">
+          <span class="section__tag">Trusted by customers</span>
+          <h2 class="section__title">Customer Reviews</h2>
+        </div>
+        <div class="reviews__grid" id="reviewsGrid"></div>
+      </section>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="cart.js"></script>
+  <script src="product.js"></script>
+</body>
+</html>

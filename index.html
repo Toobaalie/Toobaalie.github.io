@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Premium Scrunchies in Pakistan | BerryBabes.me</title>
+  <meta name="description" content="Shop premium silk, satin, velvet, and cotton scrunchies in Pakistan. BerryBabes.me offers stylish, hair-friendly scrunchies with fast delivery." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://berrybabes.me/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Premium Scrunchies in Pakistan | BerryBabes.me" />
+  <meta property="og:description" content="Discover premium scrunchie collections designed for comfort, style, and everyday glam." />
+  <meta property="og:url" content="https://berrybabes.me/" />
+  <meta property="og:image" content="https://berrybabes.me/images/img4.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Premium Scrunchies in Pakistan | BerryBabes.me" />
+  <meta name="twitter:description" content="Shop premium silk, satin, velvet, and cotton scrunchies at BerryBabes.me." />
+  <meta name="twitter:image" content="https://berrybabes.me/images/img4.png" />
+  <link rel="icon" type="image/png" href="images/img4.png" />
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Store",
+      "name": "BerryBabes.me",
+      "url": "https://berrybabes.me/",
+      "image": "https://berrybabes.me/images/img4.png",
+      "telephone": "+92 3103859992",
+      "priceRange": "PKR",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "PK"
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+
+  <!-- ===== ANNOUNCEMENT BAR ===== -->
+  <div class="announcement-bar">
+    Free shipping on orders over 3000 &mdash; Use code <strong>SCRUNCHIE15</strong>
+  </div>
+
+  <!-- ===== HEADER ===== -->
+  <header class="header" id="header">
+    <div class="container header__inner">
+
+      <!-- Logo -->
+      <a href="#" class="logo">
+        <div class="logo__icon">B</div>
+        <div class="logo__text">
+          <span class="logo__name">Berry</span>
+          <span class="logo__sub">Babes.pk</span>
+        </div>
+      </a>
+
+      <!-- Nav -->
+      <nav class="nav" id="nav">
+        <a href="#home" class="nav__link active">Home</a>
+        <a href="#products" class="nav__link ">Products</a>
+        <a href="#about" class="nav__link ">About</a>
+        <a href="#quiz" class="nav__link ">Quiz</a>
+      </nav>
+
+      <!-- Right actions -->
+      <div class="header__actions">
+        <a href="cart.html#cartWishlistSection" class="cart-btn wishlist-btn" aria-label="Wishlist items">
+          <i class="fas fa-heart"></i>
+          <span class="cart-badge wishlist-badge" id="wishlistBadge">0</span>
+        </a>
+        <a href="cart.html" class="cart-btn" id="cartBtn">
+          <i class="fas fa-shopping-bag"></i>
+          <span class="cart-badge" id="cartBadge">0</span>
+        </a>
+        <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== HERO SLIDER ===== -->
+  <section class="hero" id="home">
+    <div class="slider" id="slider">
+
+      <div class="slide slide--img4 active" style="background-image: url('images/img4.png')">
+        <div class="slide__overlay"></div>
+        <div class="slide__content">
+          <span class="slide__tag">Featured Drop</span>
+          <h1 class="slide__title">BerryBabes Signature</h1>
+          <p class="slide__desc">Soft, stylish, and photo-ready scrunchies designed for everyday glam.</p>
+          <a href="#products" class="btn btn--primary">Shop Collection</a>
+        </div>
+      </div>
+
+      <div class="slide" style="background-image: url('images/hehe.png')">
+        <div class="slide__overlay"></div>
+        <div class="slide__content">
+          <span class="slide__tag">Best Sellers</span>
+          <h1 class="slide__title">Velvet Luxe</h1>
+          <p class="slide__desc">Our signature velvet collection — buttery soft textures in 24 stunning shades.</p>
+          <a href="#products" class="btn btn--primary">Explore Now</a>
+        </div>
+      </div>
+
+      <div class="slide" style="background-image: url('images/haha.png')">
+        <div class="slide__overlay"></div>
+        <div class="slide__content">
+          <span class="slide__tag">Limited Edition</span>
+          <h1 class="slide__title">Spring Bloom</h1>
+          <p class="slide__desc">Seasonal florals meet premium fabrics. Available while they last.</p>
+          <a href="#products" class="btn btn--primary">Shop Limited</a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Arrows -->
+    <button class="slider__arrow slider__arrow--prev" id="prevBtn">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <button class="slider__arrow slider__arrow--next" id="nextBtn">
+      <i class="fas fa-chevron-right"></i>
+    </button>
+
+    <!-- Dots -->
+    <div class="slider__dots" id="sliderDots"></div>
+  </section>
+
+  <!-- ===== PERKS BAR ===== -->
+  <section class="perks">
+    <div class="container perks__grid">
+      <div class="perk">
+        <div class="perk__icon"><i class="fas fa-truck"></i></div>
+        <div><h4>Free Shipping</h4><p>On orders over 5000</p></div>
+      </div>
+      <div class="perk">
+        <div class="perk__icon"><i class="fas fa-shield-alt"></i></div>
+        <div><h4>Premium Quality</h4><p>Handcrafted materials</p></div>
+      </div>
+      <div class="perk">
+        <div class="perk__icon"><i class="fas fa-leaf"></i></div>
+        <div><h4>Eco-Friendly</h4><p>Sustainable fabrics</p></div>
+      </div>
+      <div class="perk">
+        <div class="perk__icon"><i class="fas fa-star"></i></div>
+        <div><h4>5-Star Rated</h4><p>Loved by thousands</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SCRUNCHIE QUIZ ===== -->
+  <section class="quiz section" id="quiz">
+    <div class="container">
+      <div class="section__header">
+        <span class="section__tag">Find your match</span>
+        <h2 class="section__title">Find Your Perfect Scrunchie</h2>
+        <p class="section__desc">Answer 3 quick questions and get your best scrunchie pick.</p>
+      </div>
+
+      <form class="quiz-form" id="quizForm" onsubmit="handleQuiz(event)">
+        <div class="quiz-question">
+          <label for="quizVibe">Your vibe</label>
+          <select id="quizVibe" required>
+            <option value="" disabled selected>Select your vibe</option>
+            <option value="soft">Soft</option>
+            <option value="bold">Bold</option>
+            <option value="minimal">Minimal</option>
+          </select>
+        </div>
+
+        <div class="quiz-question">
+          <label for="quizStyle">Your outfit style</label>
+          <select id="quizStyle" required>
+            <option value="" disabled selected>Select outfit style</option>
+            <option value="casual">Casual</option>
+            <option value="chic">Chic</option>
+            <option value="party">Party</option>
+          </select>
+        </div>
+
+        <div class="quiz-question">
+          <label for="quizColor">Favorite color</label>
+          <select id="quizColor" required>
+            <option value="" disabled selected>Select favorite color</option>
+            <option value="rose">Rose Pink</option>
+            <option value="neutral">Cream / Neutral</option>
+            <option value="dark">Dark Tones</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn--primary">Show My Match</button>
+      </form>
+
+      <div class="quiz-result" id="quizResult" style="display:none;"></div>
+    </div>
+  </section>
+
+  <!-- ===== PRODUCTS ===== -->
+  <section class="products section" id="products">
+    <div class="container">
+      <div class="section__header">
+        <span class="section__tag">Curated for you</span>
+        <h2 class="section__title">Featured Picks</h2>
+        <p class="section__desc">Discover our handcrafted collection of premium scrunchies.</p>
+      </div>
+
+      <!-- Filter buttons -->
+      <div class="filter-btns">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="silk">Silk</button>
+        <button class="filter-btn" data-filter="velvet">Velvet</button>
+        <button class="filter-btn" data-filter="satin">Satin</button>
+      </div>
+
+      <div class="products__grid" id="productsGrid">
+
+        <div class="product-card" data-category="silk" data-product-id="silk-scrunchie">
+          <div class="product-card__img-wrap">
+            <a href="product.html?id=silk-scrunchie" class="product-link">
+              <img src="images/1.jpeg" alt="Mulberry Silk Scrunchie" />
+            </a>
+            <span class="product-card__badge">Featured</span>
+            <div class="product-card__actions">
+              <button class="add-cart-btn" onclick="addToCart('Silk Scrunchie', 150)">
+                <i class="fas fa-shopping-bag"></i> Add to Cart
+              </button>
+              <button class="wish-btn"><i class="far fa-heart"></i></button>
+            </div>
+          </div>
+          <div class="product-card__info">
+            <span class="product-card__cat">Silk</span>
+            <h3 class="product-card__name"><a href="product.html?id=silk-scrunchie" class="product-link">Silk Scrunchie</a></h3>
+            <p class="product-card__price">Pkr 150</p>
+          </div>
+        </div>
+
+        <div class="product-card" data-category="velvet" data-product-id="velvet-rose">
+          <div class="product-card__img-wrap">
+            <a href="product.html?id=velvet-rose" class="product-link">
+              <img src="images/2.jpeg" alt="Velvet Rose Scrunchie" />
+            </a>
+    
+            <span class="product-card__badge">Featured</span>
+            <div class="product-card__actions">
+              <button class="add-cart-btn" onclick="addToCart('Velvet Rose Scrunchie', 150)">
+                <i class="fas fa-shopping-bag"></i> Add to Cart
+              </button>
+              <button class="wish-btn"><i class="far fa-heart"></i></button>
+            </div>
+          </div>
+          <div class="product-card__info">
+            <span class="product-card__cat">Velvet</span>
+            <h3 class="product-card__name"><a href="product.html?id=velvet-rose" class="product-link">Velvet Rose Scrunchie</a></h3>
+            <p class="product-card__price">Pkr 150</p>
+          </div>
+        </div>
+
+        <div class="product-card" data-category="cotton" data-product-id="cotton-classic">
+          <div class="product-card__img-wrap">
+            <a href="product.html?id=cotton-classic" class="product-link">
+              <img src="images\2.jpeg" alt="Organic Cotton Classic" />
+            </a>
+            <div class="product-card__actions">
+              <button class="add-cart-btn" onclick="addToCart('Organic Cotton Classic', 150)">
+                <i class="fas fa-shopping-bag"></i> Add to Cart
+              </button>
+              <button class="wish-btn"><i class="far fa-heart"></i></button>
+            </div>
+          </div>
+          <div class="product-card__info">
+            <span class="product-card__cat">Cotton</span>
+            <h3 class="product-card__name"><a href="product.html?id=cotton-classic" class="product-link">Organic Cotton</a></h3>
+            <p class="product-card__price">Pkr 150</p>
+          </div>
+        </div>
+
+        <div class="product-card" data-category="satin" data-product-id="satin-dream">
+          <div class="product-card__img-wrap">
+            <a href="product.html?id=satin-dream" class="product-link">
+              <img src="images/3.jpeg" alt="Satin Dream Scrunchie" />
+            </a>
+            <span class="product-card__badge">Featured</span>
+            <div class="product-card__actions">
+              <button class="add-cart-btn" onclick="addToCart('Satin Dream Scrunchie', 150)">
+                <i class="fas fa-shopping-bag"></i> Add to Cart
+              </button>
+              <button class="wish-btn"><i class="far fa-heart"></i></button>
+            </div>
+          </div>
+          <div class="product-card__info">
+            <span class="product-card__cat">Satin</span>
+            <h3 class="product-card__name"><a href="product.html?id=satin-dream" class="product-link">Satin Scrunchie</a></h3>
+            <p class="product-card__price">Pkr 150</p>
+          </div>
+        </div>
+
+        <div class="product-card" data-category="velvet" data-product-id="velvet-midnight">
+          <div class="product-card__img-wrap">
+            <a href="product.html?id=velvet-midnight" class="product-link">
+              <img src="images/3.jpeg" alt="Midnight Velvet" />
+            </a>
+            <div class="product-card__actions">
+              <button class="add-cart-btn" onclick="addToCart('Midnight Velvet', 150)">
+                <i class="fas fa-shopping-bag"></i> Add to Cart
+              </button>
+              <button class="wish-btn"><i class="far fa-heart"></i></button>
+            </div>
+          </div>
+          <div class="product-card__info">
+            <span class="product-card__cat">Velvet</span>
+            <h3 class="product-card__name"><a href="product.html?id=velvet-midnight" class="product-link">Midnight Velvet</a></h3>
+            <p class="product-card__price">Pkr 150</p>
+          </div>
+        </div>
+
+        <div class="product-card" data-category="silk" data-product-id="silk-bundle">
+          <div class="product-card__img-wrap">
+            <a href="product.html?id=silk-bundle" class="product-link">
+              <img src="images/3.jpeg" alt="Blush Silk Bundle" />
+            </a>
+            <span class="product-card__badge">Bundle</span>
+            <div class="product-card__actions">
+              <button class="add-cart-btn" onclick="addToCart('Blush Silk Bundle', 150)">
+                <i class="fas fa-shopping-bag"></i> Add to Cart
+              </button>
+              <button class="wish-btn"><i class="far fa-heart"></i></button>
+            </div>
+          </div>
+          <div class="product-card__info">
+            <span class="product-card__cat">Silk</span>
+            <h3 class="product-card__name"><a href="product.html?id=silk-bundle" class="product-link">Blush Silk Bundle</a></h3>
+            <p class="product-card__price">Pkr 150</p>
+          </div>
+        </div>
+        
+        <div class="product-card" data-category="satin" data-product-id="spring-bloom">
+          <div class="product-card__img-wrap">
+            <a href="product.html?id=spring-bloom" class="product-link">
+              <img src="images/3.jpeg" alt="Spring Bloom Collection" />
+            </a>
+            <span class="product-card__badge">Limited</span>
+            <div class="product-card__actions">
+              <button class="add-cart-btn" onclick="addToCart('Spring Bloom Collection', 150)">
+                <i class="fas fa-shopping-bag"></i> Add to Cart
+              </button>
+              <button class="wish-btn"><i class="far fa-heart"></i></button>
+            </div>
+          </div>
+          <div class="product-card__info">
+            <span class="product-card__cat">Seasonal</span>
+            <h3 class="product-card__name"><a href="product.html?id=spring-bloom" class="product-link">Spring Bloom Collection</a></h3>
+            <p class="product-card__price">Pkr 150</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ABOUT ===== -->
+  <section class="about section" id="about">
+    <div class="container about__inner">
+      <div class="about__img-wrap">
+        <img src="images/3.jpeg" alt="About Scrunchie Studio" />
+      </div>
+      <div class="about__content">
+        <span class="section__tag">Our Story</span>
+        <h2 class="section__title" style="text-align:left">Born from a simple idea</h2>
+        <p>We started this scrunchie brand with one simple idea — cute hair days should be easy. No hair damage, no boring styles, just soft, trendy scrunchies that make every outfit better.
+
+Every scrunchie is made to add a little fun, color, and confidence to your everyday look. Whether you're heading to class, hanging out with friends, or taking the perfect selfie, our scrunchies are here to match your vibe.</p>
+        <div class="about__stats">
+          <div class="stat"><span class="stat__num">5K+</span><span class="stat__label">Customers</span></div>
+          <div class="stat"><span class="stat__num">200+</span><span class="stat__label">Styles</span></div>
+          <div class="stat"><span class="stat__num">100%</span><span class="stat__label">Eco-Friendly</span></div>
+          <div class="stat"><span class="stat__num">4.9★</span><span class="stat__label">Rating</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== NEWSLETTER ===== -->
+  <section class="newsletter section">
+    <div class="container newsletter__inner">
+      <span class="section__tag">Stay in the loop</span>
+      <h2 class="section__title">Join the Studio</h2>
+      <p>Be the first to know about new collections, exclusive offers, and styling tips.</p>
+      <form class="newsletter__form" onsubmit="handleNewsletter(event)">
+        <input type="email" placeholder="Your email address" required />
+        <button type="submit" class="btn btn--primary">
+          <i class="fas fa-paper-plane"></i> Subscribe
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__grid">
+
+        <!-- Information -->
+        <div class="footer__col">
+          <h4 class="footer__heading">Information</h4>
+          <ul class="footer__list">
+            <li><a href="#">About Us</a></li>
+            <li><a href="shipping-policy.html">Shipping Policy</a></li>
+            <li><a href="returns-exchange.html">Return &amp; Exchange</a></li>
+            <li><a href="privacy-policy.html">Privacy Policy</a></li>
+            <li><a href="terms-of-service.html">Terms of Service</a></li>
+          </ul>
+        </div>
+
+        <!-- Customer Care -->
+        <div class="footer__col">
+          <h4 class="footer__heading">Customer Care</h4>
+          <ul class="footer__list">
+            <li><a href="#">FAQ</a></li>
+            <li><a href="#">Track Your Order</a></li>
+            <li><a href="#">Size Guide</a></li>
+            <li><a href="#">Gift Cards</a></li>
+            <li><a href="#">Loyalty Program</a></li>
+          </ul>
+        </div>
+
+        <!-- Contact Us -->
+        <div class="footer__col">
+          <h4 class="footer__heading">Contact Us</h4>
+          <ul class="footer__list footer__list--contact">
+            <li>hello@scrunchie.studio</li>
+            <li>+92 3103859992</li>
+            <li>Mon – Fri: 9am – 6pm EST</li>
+          </ul>
+          <div class="social-icons">
+            <a href="#" class="social-icon" aria-label="Facebook">
+              <i class="fab fa-facebook-f"></i>
+            </a>
+            <a href="#" class="social-icon" aria-label="Instagram">
+              <i class="fab fa-instagram"></i>
+            </a>
+          </div>
+        </div>
+
+      <!-- Footer bottom -->
+      <div class="footer__bottom">
+        <div class="footer__logo">
+          <div class="logo__icon logo__icon--sm">B</div>
+          <span>&copy; 2026 Scrunchie Studio. All rights reserved.</span>
+        </div>
+        <div class="footer__legal">
+          <a href="privacy-policy.html">Privacy</a>
+          <a href="terms-of-service.html">Terms</a>
+          <a href="#">Cookies</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Scroll to top -->
+  <button class="scroll-top" id="scrollTop" aria-label="Scroll to top">
+    <i class="fas fa-chevron-up"></i>
+  </button>
+
+  <script src="cart.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

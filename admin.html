@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BerryBabes.me | Admin Orders</title>
+  <meta name="description" content="BerryBabes admin dashboard." />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <link rel="canonical" href="https://berrybabes.me/admin.html" />
+  <link rel="icon" type="image/png" href="images/img4.png" />
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+  <div class="announcement-bar">
+    Admin Dashboard &mdash; Orders &amp; Subscribers
+  </div>
+
+  <header class="header product-header" id="header">
+    <div class="container header__inner">
+      <a href="index.html" class="logo">
+        <div class="logo__icon">B</div>
+        <div class="logo__text">
+          <span class="logo__name">Berry</span>
+          <span class="logo__sub">Babes.pk</span>
+        </div>
+      </a>
+
+      <div class="header__actions">
+        <a href="index.html" class="btn btn--primary product-back-btn">Back to Store</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="section admin-page">
+    <div class="container">
+      <div class="section__header">
+        <span class="section__tag">Store Admin</span>
+        <h1 class="section__title">Orders &amp; Subscribers</h1>
+      </div>
+
+      <section class="admin-toolbar">
+        <button id="refreshAdmin" class="btn btn--primary" type="button">Refresh</button>
+        <button id="exportOrders" class="btn btn--primary" type="button">Export Orders CSV</button>
+        <button id="exportSubscribers" class="btn btn--primary" type="button">Export Subscribers CSV</button>
+        <button id="clearOrders" class="btn btn--primary" type="button">Clear Orders</button>
+        <button id="clearSubscribers" class="btn btn--primary" type="button">Clear Subscribers</button>
+      </section>
+
+      <p id="adminStatus" class="admin-status" aria-live="polite"></p>
+
+      <section id="adminOrders" class="admin-orders"></section>
+
+      <section class="section__header admin-subscribers-header">
+        <h2 class="section__title">Subscribers</h2>
+      </section>
+      <section id="adminSubscribers" class="admin-orders"></section>
+    </div>
+  </main>
+
+  <script src="admin.js"></script>
+</body>
+</html>

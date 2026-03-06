@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BerryBabes.me | Checkout</title>
+  <meta name="description" content="Secure checkout for your BerryBabes.me scrunchie order." />
+  <meta name="robots" content="noindex, follow" />
+  <link rel="canonical" href="https://berrybabes.me/checkout.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Checkout | BerryBabes.me" />
+  <meta property="og:description" content="Complete your scrunchie order at BerryBabes.me." />
+  <meta property="og:url" content="https://berrybabes.me/checkout.html" />
+  <meta property="og:image" content="https://berrybabes.me/images/img4.png" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="icon" type="image/png" href="images/img4.png" />
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+  <div class="announcement-bar">
+    Free shipping on orders over 3000 &mdash; Use code <strong>SCRUNCHIE15</strong>
+  </div>
+
+  <header class="header product-header" id="header">
+    <div class="container header__inner">
+      <a href="index.html" class="logo">
+        <div class="logo__icon">B</div>
+        <div class="logo__text">
+          <span class="logo__name">Berry</span>
+          <span class="logo__sub">Babes.pk</span>
+        </div>
+      </a>
+
+      <div class="header__actions">
+        <a href="cart.html#cartWishlistSection" class="cart-btn wishlist-btn" aria-label="Wishlist items">
+          <i class="fas fa-heart"></i>
+          <span class="cart-badge wishlist-badge" id="wishlistBadge">0</span>
+        </a>
+        <a href="cart.html" class="cart-btn" aria-label="Cart items">
+          <i class="fas fa-shopping-bag"></i>
+          <span class="cart-badge" id="cartBadge">0</span>
+        </a>
+        <a href="cart.html" class="btn btn--primary product-back-btn">Back to Cart</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="checkout-page section">
+    <div class="container">
+      <div class="section__header checkout-header">
+        <span class="section__tag">Final step</span>
+        <h1 class="section__title">Checkout</h1>
+      </div>
+
+      <div class="checkout-layout" id="checkoutLayout">
+        <section class="checkout-form-card">
+          <h2>Shipping Address</h2>
+          <form id="checkoutForm" class="checkout-form">
+            <div class="form-row">
+              <input type="text" id="fullName" placeholder="Full Name" required />
+              <input type="tel" id="phone" placeholder="Phone Number" required />
+            </div>
+            <input type="email" id="email" placeholder="Email Address" required />
+            <textarea id="address" rows="4" placeholder="Street Address" required></textarea>
+            <div class="form-row">
+              <input type="text" id="city" placeholder="City" required />
+              <input type="text" id="postalCode" placeholder="Postal Code" required />
+            </div>
+            <textarea id="notes" rows="3" placeholder="Order notes (optional)"></textarea>
+
+            <button type="submit" class="btn btn--primary checkout-submit" id="placeOrderBtn">
+              <i class="fas fa-check-circle"></i> Place Order
+            </button>
+          </form>
+        </section>
+
+        <aside class="checkout-summary" id="checkoutSummary"></aside>
+      </div>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="cart.js"></script>
+  <script src="checkout.js"></script>
+</body>
+</html>

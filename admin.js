@@ -1,0 +1,289 @@
+function money(value) {
+  return `Pkr ${Number(value).toFixed(0)}`;
+}
+
+function escapeHtml(value) {
+  return String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function setStatus(message, isError = false) {
+  const status = document.getElementById('adminStatus');
+  if (!status) return;
+  status.textContent = message;
+  status.classList.toggle('admin-status--error', isError);
+}
+
+function orderCard(order) {
+  const items = (order.items || [])
+    .map(item => {
+      const itemTotal = Number(item.price || 0) * Number(item.quantity || 0);
+      return `<li>${escapeHtml(item.name)} (${escapeHtml(item.color)}) x${Number(item.quantity || 0)} — ${money(itemTotal)}</li>`;
+    })
+    .join('');
+
+  return `
+    <article class="admin-order-card">
+      <div class="admin-order-card__top">
+        <h3>${escapeHtml(order.id || 'Order')}</h3>
+        <span>${new Date(order.createdAt).toLocaleString()}</span>
+      </div>
+      <div class="admin-order-card__grid">
+        <p><strong>Name:</strong> ${escapeHtml(order.fullName)}</p>
+        <p><strong>Phone:</strong> ${escapeHtml(order.phone)}</p>
+        <p><strong>Email:</strong> ${escapeHtml(order.email || '-')}</p>
+        <p><strong>City:</strong> ${escapeHtml(order.city)}</p>
+        <p><strong>Postal Code:</strong> ${escapeHtml(order.postalCode)}</p>
+      </div>
+      <p><strong>Address:</strong> ${escapeHtml(order.address)}</p>
+      <p><strong>Notes:</strong> ${escapeHtml(order.notes || '-')}</p>
+      <ul class="admin-order-items">${items}</ul>
+      <p class="admin-order-total"><strong>Total:</strong> ${money(order.total || 0)}</p>
+    </article>
+  `;
+}
+
+function subscriberCard(subscriber) {
+  return `
+    <article class="admin-order-card">
+      <div class="admin-order-card__top">
+        <h3>${escapeHtml(subscriber.email)}</h3>
+        <span>${new Date(subscriber.createdAt).toLocaleString()}</span>
+      </div>
+    </article>
+  `;
+}
+
+function renderOrders(orders) {
+  const container = document.getElementById('adminOrders');
+  if (!container) return;
+
+  if (!orders.length) {
+    container.innerHTML = `
+      <div class="cart-empty">
+        <h2>No orders yet</h2>
+        <p>Placed orders will appear here.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = orders.map(orderCard).join('');
+}
+
+function renderSubscribers(subscribers) {
+  const container = document.getElementById('adminSubscribers');
+  if (!container) return;
+
+  if (!subscribers.length) {
+    container.innerHTML = `
+      <div class="cart-empty">
+        <h2>No subscribers yet</h2>
+        <p>New newsletter subscribers will appear here.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = subscribers.map(subscriberCard).join('');
+}
+
+function toCsv(rows) {
+  const escapedRows = rows.map(cells =>
+    cells
+      .map(cell => `"${String(cell || '').replaceAll('"', '""')}"`)
+      .join(',')
+  );
+  return escapedRows.join('\n');
+}
+
+function downloadCsv(fileName, rows) {
+  const csv = toCsv(rows);
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function ordersToCsvRows(orders) {
+  const header = [
+    'id',
+    'fullName',
+    'phone',
+    'email',
+    'address',
+    'city',
+    'postalCode',
+    'notes',
+    'total',
+    'createdAt',
+    'items'
+  ];
+  const body = orders.map(order => [
+    order.id,
+    order.fullName,
+    order.phone,
+    order.email,
+    order.address,
+    order.city,
+    order.postalCode,
+    order.notes,
+    order.total,
+    order.createdAt,
+    (order.items || [])
+      .map(item => `${item.name} (${item.color}) x${item.quantity}`)
+      .join(' | ')
+  ]);
+
+  return [header, ...body];
+}
+
+function subscribersToCsvRows(subscribers) {
+  const header = ['email', 'createdAt'];
+  const body = subscribers.map(subscriber => [subscriber.email, subscriber.createdAt]);
+  return [header, ...body];
+}
+
+async function loadAdminData() {
+  const [ordersResponse, subscribersResponse] = await Promise.all([
+    fetch('/api/orders'),
+    fetch('/api/subscribers')
+  ]);
+
+  if (!ordersResponse.ok || !subscribersResponse.ok) {
+    throw new Error('Unable to load admin data');
+  }
+
+  const ordersPayload = await ordersResponse.json();
+  const subscribersPayload = await subscribersResponse.json();
+  const orders = ordersPayload.orders || [];
+  const subscribers = subscribersPayload.subscribers || [];
+
+  renderOrders(orders);
+  renderSubscribers(subscribers);
+  return { orders, subscribers };
+}
+
+async function clearCollection(endpoint, label) {
+  const isConfirmed = window.confirm(`Clear all ${label}? This cannot be undone.`);
+  if (!isConfirmed) {
+    return false;
+  }
+
+  const response = await fetch(endpoint, { method: 'DELETE' });
+  if (!response.ok) {
+    throw new Error(`Unable to clear ${label}`);
+  }
+
+  return true;
+}
+
+function setupActions(getState, refreshData) {
+  const refreshButton = document.getElementById('refreshAdmin');
+  const exportOrdersButton = document.getElementById('exportOrders');
+  const exportSubscribersButton = document.getElementById('exportSubscribers');
+  const clearOrdersButton = document.getElementById('clearOrders');
+  const clearSubscribersButton = document.getElementById('clearSubscribers');
+
+  if (refreshButton) {
+    refreshButton.addEventListener('click', async () => {
+      try {
+        await refreshData();
+        setStatus('Admin data refreshed.');
+      } catch {
+        setStatus('Unable to refresh admin data.', true);
+      }
+    });
+  }
+
+  if (exportOrdersButton) {
+    exportOrdersButton.addEventListener('click', () => {
+      const state = getState();
+      downloadCsv('orders.csv', ordersToCsvRows(state.orders));
+      setStatus('Orders CSV exported.');
+    });
+  }
+
+  if (exportSubscribersButton) {
+    exportSubscribersButton.addEventListener('click', () => {
+      const state = getState();
+      downloadCsv('subscribers.csv', subscribersToCsvRows(state.subscribers));
+      setStatus('Subscribers CSV exported.');
+    });
+  }
+
+  if (clearOrdersButton) {
+    clearOrdersButton.addEventListener('click', async () => {
+      try {
+        const cleared = await clearCollection('/api/orders', 'orders');
+        if (!cleared) return;
+        await refreshData();
+        setStatus('Orders cleared.');
+      } catch {
+        setStatus('Unable to clear orders.', true);
+      }
+    });
+  }
+
+  if (clearSubscribersButton) {
+    clearSubscribersButton.addEventListener('click', async () => {
+      try {
+        const cleared = await clearCollection('/api/subscribers', 'subscribers');
+        if (!cleared) return;
+        await refreshData();
+        setStatus('Subscribers cleared.');
+      } catch {
+        setStatus('Unable to clear subscribers.', true);
+      }
+    });
+  }
+}
+
+(function initAdminOrders() {
+  const state = {
+    orders: [],
+    subscribers: []
+  };
+
+  async function refreshData() {
+    const data = await loadAdminData();
+    state.orders = data.orders;
+    state.subscribers = data.subscribers;
+  }
+
+  setupActions(() => state, refreshData);
+
+  refreshData().catch(() => {
+    const ordersContainer = document.getElementById('adminOrders');
+    const subscribersContainer = document.getElementById('adminSubscribers');
+
+    if (ordersContainer) {
+      ordersContainer.innerHTML = `
+        <div class="cart-empty">
+          <h2>Unable to load orders</h2>
+          <p>Make sure the backend server is running.</p>
+        </div>
+      `;
+    }
+
+    if (subscribersContainer) {
+      subscribersContainer.innerHTML = `
+        <div class="cart-empty">
+          <h2>Unable to load subscribers</h2>
+          <p>Make sure the backend server is running.</p>
+        </div>
+      `;
+    }
+
+    setStatus('Unable to load admin data.', true);
+  });
+})();

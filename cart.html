@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BerryBabes.me | Cart</title>
+  <meta name="description" content="Review your selected scrunchies before checkout at BerryBabes.me." />
+  <meta name="robots" content="noindex, follow" />
+  <link rel="canonical" href="https://berrybabes.me/cart.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Your Cart | BerryBabes.me" />
+  <meta property="og:description" content="Review your selected scrunchies before checkout." />
+  <meta property="og:url" content="https://berrybabes.me/cart.html" />
+  <meta property="og:image" content="https://berrybabes.me/images/img4.png" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="icon" type="image/png" href="images/img4.png" />
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+  <div class="announcement-bar">
+    Free shipping on orders over 3000 &mdash; Use code <strong>SCRUNCHIE15</strong>
+  </div>
+
+  <header class="header product-header" id="header">
+    <div class="container header__inner">
+      <a href="index.html" class="logo">
+        <div class="logo__icon">B</div>
+        <div class="logo__text">
+          <span class="logo__name">Berry</span>
+          <span class="logo__sub">Babes.pk</span>
+        </div>
+      </a>
+
+      <div class="header__actions">
+        <a href="cart.html#cartWishlistSection" class="cart-btn wishlist-btn" aria-label="Wishlist items">
+          <i class="fas fa-heart"></i>
+          <span class="cart-badge wishlist-badge" id="wishlistBadge">0</span>
+        </a>
+        <a href="cart.html" class="cart-btn" aria-label="Cart items">
+          <i class="fas fa-shopping-bag"></i>
+          <span class="cart-badge" id="cartBadge">0</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="cart-page section">
+    <div class="container">
+      <div class="section__header">
+        <span class="section__tag">Your bag</span>
+        <h1 class="section__title">Shopping Cart</h1>
+      </div>
+
+      <section id="cartContent" class="cart-content"></section>
+
+      <section class="cart-wishlist" id="cartWishlistSection">
+        <h2 class="cart-wishlist__title">My Wishlist</h2>
+        <div class="cart-wishlist__grid" id="cartWishlist"></div>
+      </section>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="cart.js"></script>
+  <script src="cart-page.js"></script>
+</body>
+</html>
