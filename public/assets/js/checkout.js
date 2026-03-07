@@ -73,7 +73,7 @@ function buildOrderEndpoints() {
   return Array.from(new Set(endpoints));
 }
 
-async function postOrderWithTimeout(endpoint, payload, timeoutMs = 5000) {
+async function postOrderWithTimeout(endpoint, payload, timeoutMs = 20000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -91,7 +91,7 @@ async function postOrderWithTimeout(endpoint, payload, timeoutMs = 5000) {
     return { response, body };
   } catch (error) {
     if (error && error.name === 'AbortError') {
-      throw new Error('Request timed out. Please try again.');
+      throw new Error('Request timed out. Server may be waking up, retrying...');
     }
     throw error;
   } finally {
@@ -334,7 +334,15 @@ async function placeOrder(event) {
   try {
     for (const endpoint of candidateEndpoints) {
       try {
-        const { response, body: payload } = await postOrderWithTimeout(endpoint, order);
+        let result;
+        try {
+          result = await postOrderWithTimeout(endpoint, order);
+        } catch (firstError) {
+          // Retry once for cold starts / transient network delays.
+          result = await postOrderWithTimeout(endpoint, order);
+        }
+
+        const { response, body: payload } = result;
         if (!response.ok) {
           throw new Error(payload.error || `Failed to place order (HTTP ${response.status})`);
         }
