@@ -62,17 +62,18 @@ function showBlockingMessage(message) {
 
 function buildOrderEndpoints() {
   const sameOriginEndpoint = `${window.location.origin}/api/orders`;
-  const fallbackEndpoint = 'https://berrybabes.me/api/orders';
-  const endpoints = [sameOriginEndpoint];
+  const canonicalEndpoint = 'https://berrybabes.me/api/orders';
+  const railwayEmergencyEndpoint = 'https://toobaaliegithubio-production.up.railway.app/api/orders';
+  const endpoints = [sameOriginEndpoint, canonicalEndpoint, railwayEmergencyEndpoint];
 
   if (!window.location.hostname.includes('berrybabes.me')) {
-    endpoints.push(fallbackEndpoint);
+    endpoints.push(canonicalEndpoint);
   }
 
   return Array.from(new Set(endpoints));
 }
 
-async function postOrderWithTimeout(endpoint, payload, timeoutMs = 8000) {
+async function postOrderWithTimeout(endpoint, payload, timeoutMs = 5000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -318,7 +319,14 @@ async function placeOrder(event) {
   };
 
   const submitButton = document.getElementById('placeOrderBtn');
-  if (submitButton) submitButton.disabled = true;
+  if (submitButton) {
+    if (!submitButton.dataset.originalText) {
+      submitButton.dataset.originalText = submitButton.innerHTML;
+    }
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing...';
+  }
+  showToast('Placing your order...');
 
   const candidateEndpoints = buildOrderEndpoints();
   let lastError = null;
@@ -363,7 +371,10 @@ async function placeOrder(event) {
   } catch (error) {
     showBlockingMessage(`Could not place order: ${error.message || 'Network or server issue. Please try again.'}`);
   } finally {
-    if (submitButton) submitButton.disabled = false;
+    if (submitButton) {
+      submitButton.disabled = false;
+      submitButton.innerHTML = submitButton.dataset.originalText || '<i class="fas fa-check-circle"></i> Place Order';
+    }
   }
 }
 
