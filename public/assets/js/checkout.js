@@ -360,6 +360,18 @@ async function placeOrder(event) {
   }
 }
 
+window.placeOrder = placeOrder;
+
+window.addEventListener('error', event => {
+  const message = `Checkout script error: ${event.message || 'Unknown error'}`;
+  showBlockingMessage(message);
+});
+
+window.addEventListener('unhandledrejection', event => {
+  const reason = event && event.reason ? String(event.reason) : 'Unknown promise error';
+  showBlockingMessage(`Checkout async error: ${reason}`);
+});
+
 (function initCheckoutPage() {
   updateCartBadge();
   updateWishlistBadge();

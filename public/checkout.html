@@ -57,7 +57,7 @@
       <div class="checkout-layout" id="checkoutLayout">
         <section class="checkout-form-card">
           <h2>Shipping Address</h2>
-          <form id="checkoutForm" class="checkout-form">
+          <form id="checkoutForm" class="checkout-form" novalidate onsubmit="placeOrder(event)">
             <div class="form-row">
               <input type="text" id="fullName" placeholder="Full Name" required />
               <input type="tel" id="phone" placeholder="Phone Number" required />
@@ -102,7 +102,7 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="assets/js/cart.js?v=20260307-2"></script>
-  <script src="assets/js/checkout.js?v=20260307-2"></script>
+  <script src="assets/js/cart.js?v=20260307-3"></script>
+  <script src="assets/js/checkout.js?v=20260307-3"></script>
 </body>
 </html>
