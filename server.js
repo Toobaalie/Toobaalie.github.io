@@ -19,6 +19,7 @@ const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGODB_URL || '';
 const MONGODB_DB = process.env.MONGODB_DB || process.env.MONGO_DB_DB || 'berrybabes';
 const SMTP_FROM = process.env.SMTP_FROM || process.env.SMTP_USER || '';
 const SMTP_FROM_NAME = process.env.SMTP_FROM_NAME || 'BerryBabes Orders';
+const EMAIL_NOTIFICATIONS_ENABLED = false;
 
 let mongoClient = null;
 let mongoDb = null;
@@ -102,6 +103,9 @@ const mailTransporter = smtpConfigured
       host: smtpHost,
       port: smtpPort,
       secure: smtpSecure,
+      connectionTimeout: 5000,
+      greetingTimeout: 5000,
+      socketTimeout: 7000,
       auth: {
         user: smtpUser,
         pass: smtpPass
@@ -263,6 +267,21 @@ async function sendEmail({ to, subject, html }) {
   return { sent: true };
 }
 
+async function sendEmailWithTimeout(payload, timeoutMs = 6000) {
+  try {
+    const timeoutPromise = new Promise(resolve => {
+      setTimeout(() => resolve({ sent: false, reason: 'timeout' }), timeoutMs);
+    });
+
+    return await Promise.race([
+      sendEmail(payload),
+      timeoutPromise
+    ]);
+  } catch (error) {
+    return { sent: false, reason: 'send_failed' };
+  }
+}
+
 function readCustomerReviews() {
   ensureCustomerReviewsFile();
   const raw = fs.readFileSync(CUSTOMER_REVIEWS_PATH, 'utf8');
@@ -307,15 +326,17 @@ app.post('/api/subscribe', async (req, res) => {
       writeSubscribers(subscribers);
     }
 
-    const emailResult = await sendEmail({
-      to: email,
-      subject: 'Welcome to BerryBabes.pk ✨',
-      html: `
-        <h2>Thanks for subscribing!</h2>
-        <p>You are now part of the BerryBabes community.</p>
-        <p>We will send you new drops, offers, and styling updates.</p>
-      `
-    }).catch(() => ({ sent: false }));
+    const emailResult = EMAIL_NOTIFICATIONS_ENABLED
+      ? await sendEmailWithTimeout({
+          to: email,
+          subject: 'Welcome to BerryBabes.pk ✨',
+          html: `
+            <h2>Thanks for subscribing!</h2>
+            <p>You are now part of the BerryBabes community.</p>
+            <p>We will send you new drops, offers, and styling updates.</p>
+          `
+        })
+      : { sent: false, reason: 'disabled' };
 
     return res.status(201).json({
       success: true,
@@ -355,14 +376,14 @@ app.post('/api/orders', async (req, res) => {
     await saveOrderStorage(order);
 
     let emailSent = false;
-    let emailStatus = 'not_requested';
-    if (order.email) {
+    let emailStatus = 'disabled';
+    if (order.email && EMAIL_NOTIFICATIONS_ENABLED) {
       emailStatus = smtpConfigured ? 'pending' : 'not_configured';
       const orderItemsHtml = (order.items || [])
         .map(item => `<li>${item.name} (${item.color}) x${item.quantity}</li>`)
         .join('');
 
-      const emailResult = await sendEmail({
+      const emailResult = await sendEmailWithTimeout({
         to: order.email,
         subject: `Order Verified - ${order.id}`,
         html: `
@@ -374,9 +395,6 @@ app.post('/api/orders', async (req, res) => {
           <h4>Items:</h4>
           <ul>${orderItemsHtml}</ul>
         `
-      }).catch(error => {
-        console.error('Order email send failed:', error.message || error);
-        return { sent: false, reason: 'send_failed' };
       });
 
       emailSent = emailResult.sent;
