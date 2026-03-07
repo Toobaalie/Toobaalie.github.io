@@ -17,6 +17,7 @@ const SUBSCRIBERS_PATH = path.join(ROOT_DIR, 'data', 'subscribers.json');
 const CUSTOMER_REVIEWS_PATH = path.join(ROOT_DIR, 'data', 'customer-reviews.json');
 const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGODB_URL || '';
 const MONGODB_DB = process.env.MONGODB_DB || process.env.MONGO_DB_DB || 'berrybabes';
+const REQUIRE_MONGODB_FOR_ORDERS = true;
 const SMTP_FROM = process.env.SMTP_FROM || process.env.SMTP_USER || '';
 const SMTP_FROM_NAME = process.env.SMTP_FROM_NAME || 'BerryBabes Orders';
 const EMAIL_NOTIFICATIONS_ENABLED = false;
@@ -361,6 +362,17 @@ app.post('/api/subscribe', async (req, res) => {
 
 app.post('/api/orders', async (req, res) => {
   try {
+    if (REQUIRE_MONGODB_FOR_ORDERS) {
+      const mongoReady = await ensureMongoConnection();
+      if (!mongoReady || !getOrdersCollection()) {
+        return res.status(503).json({
+          error: 'Order service unavailable: MongoDB is not connected. Please configure MONGODB_URI and try again.',
+          storageBackend: 'json-fallback',
+          requiresMongo: true
+        });
+      }
+    }
+
     const payload = req.body || {};
     const required = ['fullName', 'phone', 'address', 'items'];
     const missing = required.filter(key => !payload[key] || (Array.isArray(payload[key]) && !payload[key].length));
