@@ -240,7 +240,9 @@ app.post('/api/orders', async (req, res) => {
     writeOrders(orders);
 
     let emailSent = false;
+    let emailStatus = 'not_requested';
     if (order.email) {
+      emailStatus = smtpConfigured ? 'pending' : 'not_configured';
       const orderItemsHtml = (order.items || [])
         .map(item => `<li>${item.name} (${item.color}) x${item.quantity}</li>`)
         .join('');
@@ -257,12 +259,13 @@ app.post('/api/orders', async (req, res) => {
           <h4>Items:</h4>
           <ul>${orderItemsHtml}</ul>
         `
-      }).catch(() => ({ sent: false }));
+      }).catch(() => ({ sent: false, reason: 'send_failed' }));
 
       emailSent = emailResult.sent;
+      emailStatus = emailResult.sent ? 'sent' : (emailResult.reason || 'send_failed');
     }
 
-    return res.status(201).json({ success: true, orderId: order.id, emailSent });
+    return res.status(201).json({ success: true, orderId: order.id, emailSent, emailStatus });
   } catch (error) {
     return res.status(500).json({ error: 'Unable to save order' });
   }

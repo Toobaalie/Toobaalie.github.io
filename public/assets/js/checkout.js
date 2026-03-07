@@ -288,10 +288,16 @@ async function placeOrder(event) {
         localStorage.setItem('berrybabes_last_order', JSON.stringify({ ...order, orderId: payload.orderId }));
         window.CartStore.saveCart([]);
         updateCartBadge();
-        const emailStatus = payload.emailSent
-          ? 'Confirmation email sent.'
-          : 'Order saved, but confirmation email was not sent.';
-        showToast(`Order placed! ID: ${payload.orderId}. ${emailStatus}`);
+        let confirmationMessage = 'Order confirmed. We will contact you shortly.';
+        if (payload.emailStatus === 'sent' || payload.emailSent) {
+          confirmationMessage = 'Confirmation email sent.';
+        } else if (payload.emailStatus === 'not_requested') {
+          confirmationMessage = 'Order confirmed. We will confirm by phone.';
+        } else if (payload.emailStatus === 'not_configured') {
+          confirmationMessage = 'Order confirmed. We will confirm by phone.';
+        }
+
+        showToast(`Order placed! ID: ${payload.orderId}. ${confirmationMessage}`);
         form.reset();
 
         setTimeout(() => {
