@@ -274,7 +274,7 @@ app.post('/api/subscribe', async (req, res) => {
     const emailResult = EMAIL_NOTIFICATIONS_ENABLED
       ? await sendEmailWithTimeout({
           to: email,
-          subject: 'Welcome to BerryBabes.pk ✨',
+          subject: 'Welcome to BerryBabes.me ✨',
           html: `
             <h2>Thanks for subscribing!</h2>
             <p>You are now part of the BerryBabes community.</p>
@@ -296,25 +296,67 @@ app.post('/api/subscribe', async (req, res) => {
 app.post('/api/orders', async (req, res) => {
   try {
     const payload = req.body || {};
-    const required = ['fullName', 'phone', 'address', 'items'];
-    const missing = required.filter(key => !payload[key] || (Array.isArray(payload[key]) && !payload[key].length));
+    const normalizedItems = Array.isArray(payload.items)
+      ? payload.items
+          .map(item => ({
+            name: String((item || {}).name || '').trim(),
+            color: String((item || {}).color || '').trim(),
+            quantity: Number((item || {}).quantity || 0),
+            price: Number((item || {}).price || 0),
+            image: String((item || {}).image || '').trim()
+          }))
+          .filter(item => item.name && item.quantity > 0 && item.price >= 0)
+      : [];
+
+    const required = {
+      fullName: String(payload.fullName || '').trim(),
+      phone: String(payload.phone || '').trim(),
+      address: String(payload.address || '').trim()
+    };
+
+    const missing = Object.entries(required)
+      .filter(([, value]) => !value)
+      .map(([key]) => key);
+
+    if (!normalizedItems.length) {
+      missing.push('items');
+    }
 
     if (missing.length) {
       return res.status(400).json({ error: `Missing fields: ${missing.join(', ')}` });
     }
 
+    if (required.fullName.length < 2) {
+      return res.status(400).json({ error: 'fullName must be at least 2 characters' });
+    }
+
+    if (required.phone.length < 8) {
+      return res.status(400).json({ error: 'phone must be at least 8 characters' });
+    }
+
+    if (required.address.length < 8) {
+      return res.status(400).json({ error: 'address must be at least 8 characters' });
+    }
+
+    const email = String(payload.email || '').trim();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'email must be a valid address' });
+    }
+
+    const computedTotal = normalizedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
     const order = {
-      id: `ORD-${Date.now()}`,
-      fullName: String(payload.fullName).trim(),
-      phone: String(payload.phone).trim(),
-      email: String(payload.email || '').trim(),
-      address: String(payload.address).trim(),
+      id: `ORD-${Date.now()}-${Math.floor(Math.random() * 900 + 100)}`,
+      fullName: required.fullName,
+      phone: required.phone,
+      email,
+      address: required.address,
       state: String(payload.state || 'Not provided').trim(),
       city: String(payload.city || 'Not provided').trim(),
       postalCode: String(payload.postalCode || 'Not provided').trim(),
       notes: String(payload.notes || '').trim(),
-      items: payload.items,
-      total: Number(payload.total) || 0,
+      items: normalizedItems,
+      total: computedTotal,
       createdAt: new Date().toISOString()
     };
 

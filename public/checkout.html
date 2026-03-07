@@ -59,11 +59,11 @@
           <h2>Shipping Address</h2>
           <form id="checkoutForm" class="checkout-form" novalidate onsubmit="placeOrder(event)">
             <div class="form-row">
-              <input type="text" id="fullName" placeholder="Full Name" />
-              <input type="tel" id="phone" placeholder="Phone Number" />
+              <input type="text" id="fullName" placeholder="Full Name" required minlength="2" />
+              <input type="tel" id="phone" placeholder="Phone Number" required minlength="8" />
             </div>
             <input type="text" id="email" placeholder="Email Address (optional)" inputmode="email" />
-            <textarea id="address" rows="4" placeholder="Street Address"></textarea>
+            <textarea id="address" rows="4" placeholder="Street Address" required minlength="8"></textarea>
             <div class="form-row">
               <select id="state">
                 <option value="" disabled selected>Select State / Region</option>
@@ -103,6 +103,6 @@
   <div class="toast" id="toast"></div>
 
   <script src="assets/js/cart.js?v=20260307-3"></script>
-  <script src="assets/js/checkout.js?v=20260307-3"></script>
+  <script src="assets/js/checkout.js?v=20260307-4"></script>
 </body>
 </html>

@@ -63,8 +63,7 @@ function showBlockingMessage(message) {
 function buildOrderEndpoints() {
   const sameOriginEndpoint = `${window.location.origin}/api/orders`;
   const canonicalEndpoint = 'https://berrybabes.me/api/orders';
-  const railwayEmergencyEndpoint = 'https://toobaaliegithubio-production.up.railway.app/api/orders';
-  const endpoints = [sameOriginEndpoint, canonicalEndpoint, railwayEmergencyEndpoint];
+  const endpoints = [sameOriginEndpoint, canonicalEndpoint];
 
   if (!window.location.hostname.includes('berrybabes.me')) {
     endpoints.push(canonicalEndpoint);
@@ -304,10 +303,10 @@ async function placeOrder(event) {
   }
 
   const order = {
-    fullName: document.getElementById('fullName').value.trim() || 'Customer',
-    phone: document.getElementById('phone').value.trim() || 'Not provided',
+    fullName: document.getElementById('fullName').value.trim(),
+    phone: document.getElementById('phone').value.trim(),
     email: document.getElementById('email').value.trim(),
-    address: document.getElementById('address').value.trim() || 'Not provided',
+    address: document.getElementById('address').value.trim(),
     state: document.getElementById('state').value.trim() || 'Not provided',
     city: document.getElementById('city').value.trim() || 'Not provided',
     postalCode: document.getElementById('postalCode').value.trim() || 'Not provided',
@@ -317,6 +316,26 @@ async function placeOrder(event) {
     total: cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
     createdAt: new Date().toISOString()
   };
+
+  if (order.fullName.length < 2) {
+    showBlockingMessage('Please enter your full name.');
+    return;
+  }
+
+  if (order.phone.length < 8) {
+    showBlockingMessage('Please enter a valid phone number.');
+    return;
+  }
+
+  if (order.address.length < 8) {
+    showBlockingMessage('Please enter your complete address.');
+    return;
+  }
+
+  if (order.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(order.email)) {
+    showBlockingMessage('Please enter a valid email address or leave it empty.');
+    return;
+  }
 
   const submitButton = document.getElementById('placeOrderBtn');
   if (submitButton) {
