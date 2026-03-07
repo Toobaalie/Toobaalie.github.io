@@ -67,26 +67,9 @@ SMTP_USER=
 SMTP_PASS=
 SMTP_FROM=
 
-WHATSAPP_ALERT_PHONE=
-WHATSAPP_ALERT_APIKEY=
-
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
 ```
-
-## WhatsApp Order Alerts (Recommended)
-
-To get instant order alerts on WhatsApp using CallMeBot:
-
-1. Save this contact on your phone: `+34 644 39 56 70`.
-2. Send this message on WhatsApp: `I allow callmebot to send me messages`.
-3. Open this URL in browser:
-	`https://api.callmebot.com/whatsapp.php?phone=<YOUR_PHONE_WITH_COUNTRY_CODE>&text=test&apikey=<YOUR_API_KEY>`
-4. Use your phone like `923001234567` (no spaces).
-5. Set `WHATSAPP_ALERT_PHONE` and `WHATSAPP_ALERT_APIKEY` in Railway variables.
-6. Redeploy (or push a commit) and place a test order.
-
-Each new order will send order ID, customer details, city, total, and item list to your WhatsApp.
 
 ## Telegram Order Alerts (Optional Backup)
 

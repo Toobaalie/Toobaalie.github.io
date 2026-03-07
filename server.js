@@ -23,9 +23,6 @@ const SMTP_FROM_NAME = process.env.SMTP_FROM_NAME || 'BerryBabes Orders';
 const EMAIL_NOTIFICATIONS_ENABLED = false;
 const ADMIN_API_KEY = String(process.env.ADMIN_API_KEY || '').trim();
 const CORS_ALLOWED_ORIGINS = String(process.env.CORS_ALLOWED_ORIGINS || '').trim();
-const WHATSAPP_ALERT_PHONE = String(process.env.WHATSAPP_ALERT_PHONE || '').trim();
-const WHATSAPP_ALERT_APIKEY = String(process.env.WHATSAPP_ALERT_APIKEY || '').trim();
-const WHATSAPP_NOTIFICATIONS_ENABLED = Boolean(WHATSAPP_ALERT_PHONE && WHATSAPP_ALERT_APIKEY);
 const TELEGRAM_BOT_TOKEN = String(process.env.TELEGRAM_BOT_TOKEN || '').trim();
 const TELEGRAM_CHAT_ID = String(process.env.TELEGRAM_CHAT_ID || '').trim();
 const TELEGRAM_NOTIFICATIONS_ENABLED = Boolean(TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID);
@@ -383,44 +380,6 @@ function buildOrderAlertMessage(order) {
   ].join('\n');
 }
 
-function sendWhatsappMessage(text) {
-  if (!WHATSAPP_NOTIFICATIONS_ENABLED) {
-    return Promise.resolve({ sent: false, reason: 'not_configured' });
-  }
-
-  return new Promise(resolve => {
-    const encodedText = encodeURIComponent(String(text || '').slice(0, 3500));
-    const encodedPhone = encodeURIComponent(WHATSAPP_ALERT_PHONE);
-    const encodedApiKey = encodeURIComponent(WHATSAPP_ALERT_APIKEY);
-    const url = `https://api.callmebot.com/whatsapp.php?phone=${encodedPhone}&text=${encodedText}&apikey=${encodedApiKey}`;
-
-    const request = https.get(url, response => {
-      let raw = '';
-      response.on('data', chunk => {
-        raw += chunk;
-      });
-      response.on('end', () => {
-        if (response.statusCode >= 200 && response.statusCode < 300) {
-          resolve({ sent: true });
-          return;
-        }
-
-        const reason = raw ? String(raw).slice(0, 160) : `http_${response.statusCode}`;
-        resolve({ sent: false, reason });
-      });
-    });
-
-    request.setTimeout(4500, () => {
-      request.destroy();
-      resolve({ sent: false, reason: 'timeout' });
-    });
-
-    request.on('error', () => {
-      resolve({ sent: false, reason: 'request_failed' });
-    });
-  });
-}
-
 function sendTelegramMessage(text) {
   if (!TELEGRAM_NOTIFICATIONS_ENABLED) {
     return Promise.resolve({ sent: false, reason: 'not_configured' });
@@ -479,17 +438,12 @@ function sendTelegramMessage(text) {
 
 async function notifyNewOrder(order) {
   const message = buildOrderAlertMessage(order);
-
-  const [whatsapp, telegram] = await Promise.all([
-    sendWhatsappMessage(message),
-    TELEGRAM_NOTIFICATIONS_ENABLED
-      ? sendTelegramMessage(message)
-      : Promise.resolve({ sent: false, reason: 'not_configured' })
-  ]);
+  const telegram = TELEGRAM_NOTIFICATIONS_ENABLED
+    ? await sendTelegramMessage(message)
+    : { sent: false, reason: 'not_configured' };
 
   return {
-    sent: whatsapp.sent || telegram.sent,
-    whatsapp,
+    sent: telegram.sent,
     telegram
   };
 }
@@ -800,7 +754,6 @@ app.post('/api/orders', orderLimiter, async (req, res) => {
       orderId: order.id,
       emailSent,
       emailStatus,
-      whatsappAlert: alertResult.whatsapp ? alertResult.whatsapp.sent : false,
       telegramAlert: alertResult.telegram ? alertResult.telegram.sent : false,
       storageBackend
     });
@@ -959,9 +912,6 @@ app.listen(PORT, HOST, () => {
   console.log('Order storage mode: local JSON file (data/orders.json).');
   if (!smtpConfigured) {
     console.log('Email service disabled: set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM in .env');
-  }
-  if (!WHATSAPP_NOTIFICATIONS_ENABLED) {
-    console.log('WhatsApp alerts disabled: set WHATSAPP_ALERT_PHONE and WHATSAPP_ALERT_APIKEY in .env');
   }
   if (!TELEGRAM_NOTIFICATIONS_ENABLED) {
     console.log('Telegram alerts disabled: set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in .env');
