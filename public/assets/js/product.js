@@ -534,16 +534,13 @@ function initCustomerReviewForm(productId) {
       return;
     }
 
-    if (!files.length) {
-      showToast('Please upload at least one photo for your review');
-      return;
-    }
-
-    try {
-      imageDataList = await Promise.all(files.map(readImageFileAsDataUrl));
-    } catch {
-      showToast('Could not read one or more selected images');
-      return;
+    if (files.length) {
+      try {
+        imageDataList = await Promise.all(files.map(readImageFileAsDataUrl));
+      } catch {
+        showToast('Could not read one or more selected images');
+        return;
+      }
     }
 
     const submitBtn = form.querySelector('button[type="submit"]');
@@ -568,7 +565,7 @@ function initCustomerReviewForm(productId) {
         throw new Error(payload.error || 'Unable to submit your review');
       }
 
-      showToast('Thank you. Your review is submitted and awaiting approval.');
+      showToast('Thank you. Your review is now live.');
       form.reset();
       await loadCustomerReviews(productId);
     } catch (error) {
