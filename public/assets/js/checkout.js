@@ -339,6 +339,7 @@ async function placeOrder(event) {
 
   const form = document.getElementById('checkoutForm');
   if (form) {
+    form.noValidate = true;
     form.addEventListener('submit', placeOrder);
   }
 })();
