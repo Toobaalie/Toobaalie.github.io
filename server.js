@@ -17,20 +17,63 @@ const CUSTOMER_REVIEWS_PATH = path.join(ROOT_DIR, 'data', 'customer-reviews.json
 const SMTP_FROM = process.env.SMTP_FROM || process.env.SMTP_USER || '';
 const SMTP_FROM_NAME = process.env.SMTP_FROM_NAME || 'BerryBabes Orders';
 
+function inferSmtpDefaults(emailAddress) {
+  const domain = String(emailAddress || '').split('@')[1]?.toLowerCase() || '';
+  if (!domain) return null;
+
+  const gmailDomains = new Set(['gmail.com', 'googlemail.com']);
+  const outlookDomains = new Set(['outlook.com', 'hotmail.com', 'live.com', 'msn.com']);
+  const yahooDomains = new Set(['yahoo.com', 'yahoo.co.uk', 'yahoo.in']);
+
+  if (gmailDomains.has(domain)) {
+    return { host: 'smtp.gmail.com', port: 465, secure: true };
+  }
+
+  if (outlookDomains.has(domain)) {
+    return { host: 'smtp.office365.com', port: 587, secure: false };
+  }
+
+  if (yahooDomains.has(domain)) {
+    return { host: 'smtp.mail.yahoo.com', port: 465, secure: true };
+  }
+
+  if (domain.endsWith('zoho.com') || domain.endsWith('zohomail.com')) {
+    return { host: 'smtp.zoho.com', port: 465, secure: true };
+  }
+
+  // Namecheap Private Email commonly uses this SMTP endpoint.
+  if (domain.includes('berrybabes.me') || domain.includes('privateemail')) {
+    return { host: 'mail.privateemail.com', port: 587, secure: false };
+  }
+
+  return null;
+}
+
+const smtpUser = process.env.SMTP_USER || '';
+const smtpPass = process.env.SMTP_PASS || '';
+const explicitSmtpHost = process.env.SMTP_HOST || '';
+const explicitSmtpPort = Number(process.env.SMTP_PORT || 0);
+const inferredSmtp = inferSmtpDefaults(smtpUser);
+const smtpHost = explicitSmtpHost || inferredSmtp?.host || '';
+const smtpPort = explicitSmtpPort || inferredSmtp?.port || 0;
+const smtpSecure = process.env.SMTP_SECURE
+  ? String(process.env.SMTP_SECURE).toLowerCase() === 'true'
+  : (inferredSmtp?.secure ?? smtpPort === 465);
+
 const smtpConfigured =
-  Boolean(process.env.SMTP_HOST) &&
-  Boolean(process.env.SMTP_PORT) &&
-  Boolean(process.env.SMTP_USER) &&
-  Boolean(process.env.SMTP_PASS);
+  Boolean(smtpHost) &&
+  Boolean(smtpPort) &&
+  Boolean(smtpUser) &&
+  Boolean(smtpPass);
 
 const mailTransporter = smtpConfigured
   ? nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT),
-      secure: String(process.env.SMTP_PORT) === '465',
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpSecure,
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
+        user: smtpUser,
+        pass: smtpPass
       }
     })
   : null;
