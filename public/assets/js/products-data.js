@@ -55,7 +55,7 @@ window.BerryBabesProducts = {
   },
   'satin-dream': {
     name: 'Skin Satin Set',
-    category: 'Silk',
+    category: 'Plain',
     price: 149,
     image: 'images/silk 4.jpeg',
     description: 'Glossy satin-silk feel with gentle hold and a polished look.',
@@ -97,7 +97,7 @@ window.BerryBabesProducts = {
   },
   'spring-bloom': {
     name: 'Classic Silk Edit',
-    category: 'Seasonal',
+    category: 'Plain',
     price: 149,
     image: 'images/1.jpeg',
     description: 'Lightweight silk scrunchie made for effortless, all-day styling.',

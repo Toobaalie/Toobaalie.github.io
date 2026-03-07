@@ -394,9 +394,9 @@ function handleQuiz(e) {
     'silk-scrunchie': 'Featured',
     'pearl-collection': '',
     'cotton-classic': 'Printed',
-    'satin-dream': '',
+    'satin-dream': 'Plain',
     'silk-bundle': 'Plain',
-    'spring-bloom': 'Classic'
+    'spring-bloom': 'Plain'
   };
 
   function homeCategory(product) {
