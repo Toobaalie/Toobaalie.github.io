@@ -1,6 +1,5 @@
 const express = require('express');
 const fs = require('fs');
-const https = require('https');
 const crypto = require('crypto');
 const path = require('path');
 const nodemailer = require('nodemailer');
@@ -23,9 +22,6 @@ const SMTP_FROM_NAME = process.env.SMTP_FROM_NAME || 'BerryBabes Orders';
 const EMAIL_NOTIFICATIONS_ENABLED = false;
 const ADMIN_API_KEY = String(process.env.ADMIN_API_KEY || '').trim();
 const CORS_ALLOWED_ORIGINS = String(process.env.CORS_ALLOWED_ORIGINS || '').trim();
-const TELEGRAM_BOT_TOKEN = String(process.env.TELEGRAM_BOT_TOKEN || '').trim();
-const TELEGRAM_CHAT_ID = String(process.env.TELEGRAM_CHAT_ID || '').trim();
-const TELEGRAM_NOTIFICATIONS_ENABLED = Boolean(TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID);
 
 function inferSmtpDefaults(emailAddress) {
   const domain = String(emailAddress || '').split('@')[1]?.toLowerCase() || '';
@@ -360,94 +356,6 @@ async function sendEmailWithTimeout(payload, timeoutMs = 6000) {
   }
 }
 
-function buildOrderAlertMessage(order) {
-  const itemLines = (order.items || [])
-    .slice(0, 8)
-    .map(item => `- ${item.name} (${item.color || 'N/A'}) x${item.quantity}`)
-    .join('\n');
-
-  return [
-    'New BerryBabes Order',
-    `Order ID: ${order.id}`,
-    `Name: ${order.fullName}`,
-    `Phone: ${order.phone}`,
-    `City: ${order.city || '-'}`,
-    `State: ${order.state || '-'}`,
-    `Address: ${order.address}`,
-    `Total: Pkr ${Number(order.total || 0).toFixed(0)}`,
-    itemLines ? `Items:\n${itemLines}` : 'Items: -',
-    `Placed: ${new Date(order.createdAt).toLocaleString('en-PK')}`
-  ].join('\n');
-}
-
-function sendTelegramMessage(text) {
-  if (!TELEGRAM_NOTIFICATIONS_ENABLED) {
-    return Promise.resolve({ sent: false, reason: 'not_configured' });
-  }
-
-  return new Promise(resolve => {
-    const payload = JSON.stringify({
-      chat_id: TELEGRAM_CHAT_ID,
-      text: String(text || '').slice(0, 3900)
-    });
-
-    const request = https.request({
-      method: 'POST',
-      hostname: 'api.telegram.org',
-      path: `/bot${encodeURIComponent(TELEGRAM_BOT_TOKEN)}/sendMessage`,
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(payload)
-      },
-      timeout: 4500
-    }, response => {
-      let raw = '';
-      response.on('data', chunk => {
-        raw += chunk;
-      });
-      response.on('end', () => {
-        if (response.statusCode >= 200 && response.statusCode < 300) {
-          resolve({ sent: true });
-          return;
-        }
-
-        let reason = `http_${response.statusCode}`;
-        try {
-          const parsed = JSON.parse(raw || '{}');
-          reason = parsed.description || reason;
-        } catch {
-          // Keep fallback reason when parsing fails.
-        }
-        resolve({ sent: false, reason });
-      });
-    });
-
-    request.on('timeout', () => {
-      request.destroy();
-      resolve({ sent: false, reason: 'timeout' });
-    });
-
-    request.on('error', () => {
-      resolve({ sent: false, reason: 'request_failed' });
-    });
-
-    request.write(payload);
-    request.end();
-  });
-}
-
-async function notifyNewOrder(order) {
-  const message = buildOrderAlertMessage(order);
-  const telegram = TELEGRAM_NOTIFICATIONS_ENABLED
-    ? await sendTelegramMessage(message)
-    : { sent: false, reason: 'not_configured' };
-
-  return {
-    sent: telegram.sent,
-    telegram
-  };
-}
-
 function readCustomerReviews() {
   ensureCustomerReviewsFile();
   const raw = fs.readFileSync(CUSTOMER_REVIEWS_PATH, 'utf8');
@@ -720,9 +628,6 @@ app.post('/api/orders', orderLimiter, async (req, res) => {
     await saveOrderStorage(order);
     const storageBackend = await getOrdersStorageBackend();
 
-    // Alerting should never block order creation.
-    const alertResult = await notifyNewOrder(order);
-
     let emailSent = false;
     let emailStatus = 'disabled';
     if (order.email && EMAIL_NOTIFICATIONS_ENABLED) {
@@ -754,7 +659,6 @@ app.post('/api/orders', orderLimiter, async (req, res) => {
       orderId: order.id,
       emailSent,
       emailStatus,
-      telegramAlert: alertResult.telegram ? alertResult.telegram.sent : false,
       storageBackend
     });
   } catch (error) {
@@ -912,9 +816,6 @@ app.listen(PORT, HOST, () => {
   console.log('Order storage mode: local JSON file (data/orders.json).');
   if (!smtpConfigured) {
     console.log('Email service disabled: set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM in .env');
-  }
-  if (!TELEGRAM_NOTIFICATIONS_ENABLED) {
-    console.log('Telegram alerts disabled: set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in .env');
   }
   if (!ADMIN_API_KEY) {
     console.log('Admin API is locked: set ADMIN_API_KEY in .env to access admin endpoints.');

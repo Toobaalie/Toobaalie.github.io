@@ -30,7 +30,7 @@ window.BerryBabesProducts = {
     reviews: [
       { name: 'Hira', rating: 5, text: 'All pearl shades look elegant and polished.' },
       { name: 'Nimra', rating: 4, text: 'Fabric is awesome.' },
-      { name: 'Laiba', rating: 5, text: 'Pearl black is my favorite for evening looks.' }
+      { name: 'Laiba', rating: 5, text: 'Pearl black color is best.' }
     ]
   },
   'cotton-classic': {

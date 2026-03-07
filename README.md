@@ -66,24 +66,7 @@ SMTP_PORT=
 SMTP_USER=
 SMTP_PASS=
 SMTP_FROM=
-
-TELEGRAM_BOT_TOKEN=
-TELEGRAM_CHAT_ID=
 ```
-
-## Telegram Order Alerts (Optional Backup)
-
-To get instant order alerts on Telegram:
-
-1. Create a bot with `@BotFather` and copy the bot token.
-2. Start a chat with your bot by sending any message.
-3. Open this URL in browser (replace token):
-	`https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates`
-4. Find your `chat.id` in the JSON response.
-5. Add `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` in Railway variables.
-6. Redeploy (or push a commit) and place a test order.
-
-If configured, Telegram also receives new-order alerts.
 
 ## Deploy On Railway (Live Auto Update)
 
