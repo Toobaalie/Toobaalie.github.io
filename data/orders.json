@@ -20,57 +20,5 @@
     ],
     "total": 150,
     "createdAt": "2026-03-05T22:32:42.822Z"
-  },
-  {
-    "id": "ORD-1772749878550",
-    "fullName": "Hira",
-    "phone": "03176006899",
-    "email": "toobaalisiddiqui@gmail.com",
-    "address": "Khyba",
-    "city": "Mirpurkhas",
-    "postalCode": "69000",
-    "notes": "",
-    "items": [
-      {
-        "id": "silk-scrunchie",
-        "name": "Silk Scrunchie",
-        "price": 150,
-        "color": "Rose Pink",
-        "image": "images/silk-mulberry.jpg",
-        "quantity": 1
-      },
-      {
-        "id": "silk-scrunchie",
-        "name": "Silk Scrunchie",
-        "price": 150,
-        "color": "Cream",
-        "image": "images/silk-bundle.jpg",
-        "quantity": 1
-      }
-    ],
-    "total": 300,
-    "createdAt": "2026-03-05T22:31:18.551Z"
-  },
-  {
-    "id": "ORD-1772748924075",
-    "fullName": "tooba",
-    "phone": "ali",
-    "email": "toobaalisiddiqui@gmail.com",
-    "address": "khyban",
-    "city": "mirpurkhas",
-    "postalCode": "69000",
-    "notes": "",
-    "items": [
-      {
-        "id": "organic-cotton-classic",
-        "name": "Organic Cotton Classic",
-        "price": 150,
-        "color": "Default",
-        "image": "",
-        "quantity": 1
-      }
-    ],
-    "total": 150,
-    "createdAt": "2026-03-05T22:15:24.075Z"
   }
 ]

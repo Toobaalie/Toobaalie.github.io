@@ -33,15 +33,18 @@ const STATE_CITY_MAP = {
 
 function resolveApiBase() {
   const host = window.location.hostname;
-  const sameOriginHosts = new Set([
-    'berrybabes.me',
-    'www.berrybabes.me',
-    'toobaaliegithubio-production.up.railway.app',
-    'localhost',
-    '127.0.0.1'
-  ]);
+  const canonicalApi = 'https://berrybabes.me';
+  const sameOriginHosts = new Set(['berrybabes.me', 'localhost', '127.0.0.1']);
 
-  return sameOriginHosts.has(host) ? '' : 'https://toobaaliegithubio-production.up.railway.app';
+  if (sameOriginHosts.has(host) || host.endsWith('.railway.app')) {
+    return '';
+  }
+
+  if (host === 'www.berrybabes.me') {
+    return canonicalApi;
+  }
+
+  return canonicalApi;
 }
 
 function showToast(message) {
@@ -231,7 +234,7 @@ function initCityAutocomplete() {
   });
 }
 
-function placeOrder(event) {
+async function placeOrder(event) {
   event.preventDefault();
   if (!window.CartStore) return;
 
@@ -259,36 +262,53 @@ function placeOrder(event) {
   };
 
   const apiBase = resolveApiBase();
+  const submitButton = document.getElementById('placeOrderBtn');
+  if (submitButton) submitButton.disabled = true;
 
-  fetch(`${apiBase}/api/orders`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(order)
-  })
-    .then(async response => {
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(payload.error || 'Failed to place order');
+  const candidateBases = Array.from(new Set([apiBase, 'https://berrybabes.me']));
+  let lastError = null;
+
+  try {
+    for (const base of candidateBases) {
+      const endpoint = `${base}/api/orders`;
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(order)
+        });
+
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(payload.error || 'Failed to place order');
+        }
+
+        localStorage.setItem('berrybabes_last_order', JSON.stringify({ ...order, orderId: payload.orderId }));
+        window.CartStore.saveCart([]);
+        updateCartBadge();
+        const emailStatus = payload.emailSent
+          ? 'Confirmation email sent.'
+          : 'Order saved, but confirmation email was not sent.';
+        showToast(`Order placed! ID: ${payload.orderId}. ${emailStatus}`);
+        form.reset();
+
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 1300);
+        return;
+      } catch (error) {
+        lastError = error;
       }
+    }
 
-      localStorage.setItem('berrybabes_last_order', JSON.stringify({ ...order, orderId: payload.orderId }));
-      window.CartStore.saveCart([]);
-      updateCartBadge();
-      const emailStatus = payload.emailSent
-        ? 'Confirmation email sent.'
-        : 'Order saved, but confirmation email was not sent.';
-      showToast(`✅ Order placed! ID: ${payload.orderId}. ${emailStatus}`);
-      form.reset();
-
-      setTimeout(() => {
-        window.location.href = 'index.html';
-      }, 1300);
-    })
-    .catch(error => {
-      showToast(`⚠️ ${error.message || 'Could not place order. Please try again.'}`);
-    });
+    throw lastError || new Error('Could not place order. Please try again.');
+  } catch (error) {
+    showToast(`Could not place order: ${error.message || 'Please try again.'}`);
+  } finally {
+    if (submitButton) submitButton.disabled = false;
+  }
 }
 
 (function initCheckoutPage() {
