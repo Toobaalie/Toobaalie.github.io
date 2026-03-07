@@ -2362,3 +2362,101 @@ h1, h2, h3, h4, h5 { font-family: var(--font-serif); line-height: 1.2; }
     font-size: 0.82rem;
   }
 }
+
+/* Keep hero banner in desktop composition on phones. */
+@media (max-width: 768px) {
+  .hero {
+    height: 88vh;
+    min-height: 520px;
+    max-height: 860px;
+    background: var(--light-gray);
+  }
+
+  .slide {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: transparent;
+  }
+
+  .slide--img4 {
+    background-position: center 28%;
+  }
+
+  .slide__overlay {
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.52) 0%, rgba(0, 0, 0, 0.22) 55%, transparent 100%);
+  }
+
+  .slide__content {
+    top: 50%;
+    left: 6%;
+    right: auto;
+    bottom: auto;
+    transform: translateY(-50%);
+    max-width: 560px;
+  }
+
+  .slide__title {
+    font-size: clamp(2.4rem, 6vw, 5rem);
+  }
+
+  .slide__desc {
+    max-width: 420px;
+    margin-bottom: 2rem;
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .slider__arrow {
+    display: flex;
+    width: 3rem;
+    height: 3rem;
+    font-size: 0.9rem;
+  }
+
+  .slider__arrow--prev {
+    left: 1.25rem;
+  }
+
+  .slider__arrow--next {
+    right: 1.25rem;
+  }
+
+  .slider__swipe-hint {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    height: 88vh;
+    min-height: 520px;
+  }
+
+  .slide {
+    background-position: center;
+  }
+
+  .slide__content {
+    left: 6%;
+    right: auto;
+    bottom: auto;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .slide__title {
+    font-size: clamp(2.4rem, 6vw, 5rem);
+    margin-bottom: 1.25rem;
+  }
+
+  .slide__desc {
+    font-size: 1rem;
+    line-height: 1.7;
+    margin-bottom: 2rem;
+  }
+
+  .slide__tag {
+    display: inline-block;
+  }
+}
