@@ -93,12 +93,11 @@ window.BerryBabesProducts = {
     name: 'Classic Silk Edit',
     category: 'Seasonal',
     price: 150,
-    image: 'images/WhatsApp Image 2026-03-07 at 2.47.20 AM.jpeg',
+    image: 'images/1.jpeg',
     description: 'Lightweight silk scrunchie made for effortless, all-day styling.',
-    colors: ['Classic Silk', 'Soft Silk'],
+    colors: ['Plain Scrunchie'],
     colorImages: {
-      'Classic Silk': 'images/WhatsApp Image 2026-03-07 at 2.47.20 AM.jpeg',
-      'Soft Silk': 'images/WhatsApp Image 2026-03-07 at 2.47.20 AM.jpeg'
+      'Plain Scrunchie': 'images/1.jpeg'
     },
     reviews: [
       { name: 'Rida', rating: 5, text: 'Classic silk options look soft and premium.' },
