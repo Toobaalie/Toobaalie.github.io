@@ -392,7 +392,7 @@ function handleQuiz(e) {
 
   const badgeById = {
     'silk-scrunchie': 'Featured',
-    'pearl-collection': '',
+    'pearl-collection': 'Pearl',
     'cotton-classic': 'Printed',
     'satin-dream': 'Plain',
     'silk-bundle': 'Plain',
