@@ -1,2 +1,6 @@
 node_modules/
 .env
+git_publish.log
+git_publish2.log
+git_push_result.log
+git_state.log

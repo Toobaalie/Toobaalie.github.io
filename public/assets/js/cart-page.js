@@ -2,14 +2,15 @@ function money(value) {
   return `Pkr ${Number(value).toFixed(0)}`;
 }
 
+const MAX_ITEM_QUANTITY = 10;
+
 const recommendationCatalog = {
-  'silk-scrunchie': { id: 'silk-scrunchie', name: 'Silk Scrunchie', image: 'images/1.jpeg', category: 'silk' },
-  'velvet-rose': { id: 'velvet-rose', name: 'Velvet Rose', image: 'images/2.jpeg', category: 'velvet' },
-  'cotton-classic': { id: 'cotton-classic', name: 'Organic Cotton', image: 'images/4b09add7d9792a75988407081e156d27.jpg', category: 'cotton' },
-  'satin-dream': { id: 'satin-dream', name: 'Satin Dream', image: 'images/bl.jpg', category: 'satin' },
-  'velvet-midnight': { id: 'velvet-midnight', name: 'Midnight Velvet', image: 'images/tta.jpg', category: 'velvet' },
-  'silk-bundle': { id: 'silk-bundle', name: 'Blush Silk Bundle', image: 'images/img4.png', category: 'silk' },
-  'spring-bloom': { id: 'spring-bloom', name: 'Spring Bloom', image: 'images/2ab07db0e5888ef3704dbda21080f934.jpg', category: 'seasonal' }
+  'silk-scrunchie': { id: 'silk-scrunchie', name: 'Golden Pearl Silk', image: 'images/golden pearl diff.jpeg', category: 'silk' },
+  'pearl-collection': { id: 'pearl-collection', name: 'Pearl Collection', image: 'images/pearl black.jpeg', category: 'silk' },
+  'cotton-classic': { id: 'cotton-classic', name: 'Printed Fabric Set', image: 'images/printed fabric.jpeg', category: 'printed' },
+  'satin-dream': { id: 'satin-dream', name: 'Skin Satin Set', image: 'images/silk 4.jpeg', category: 'silk' },
+  'silk-bundle': { id: 'silk-bundle', name: 'Black Silk Scrunchie', image: 'images/black plain silk.jpeg', category: 'silk' },
+  'spring-bloom': { id: 'spring-bloom', name: 'Classic Silk Edit', image: 'images/1.jpeg', category: 'silk' }
 };
 
 function getRecommendedProducts(items) {
@@ -199,7 +200,11 @@ function updateItem(index, action) {
   if (!item) return;
 
   if (action === 'plus') {
-    item.quantity += 1;
+    if (item.quantity >= MAX_ITEM_QUANTITY) {
+      showToast('Maximum quantity is 10');
+    } else {
+      item.quantity += 1;
+    }
   }
 
   if (action === 'minus') {

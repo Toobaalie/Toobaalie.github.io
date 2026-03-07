@@ -1,5 +1,6 @@
 (function initCartStore() {
   const STORAGE_KEY = 'berrybabes_cart';
+  const MAX_ITEM_QUANTITY = 10;
 
   function getCart() {
     try {
@@ -27,7 +28,7 @@
       price: Number(item.price) || 0,
       color: item.color || 'Default',
       image: item.image || '',
-      quantity: Math.max(1, Number(item.quantity) || 1)
+      quantity: Math.min(MAX_ITEM_QUANTITY, Math.max(1, Number(item.quantity) || 1))
     };
 
     const existing = cart.find(
@@ -35,7 +36,7 @@
     );
 
     if (existing) {
-      existing.quantity += normalized.quantity;
+      existing.quantity = Math.min(MAX_ITEM_QUANTITY, existing.quantity + normalized.quantity);
     } else {
       cart.push(normalized);
     }

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Premium Scrunchies in Pakistan | BerryBabes.me</title>
-  <meta name="description" content="Shop premium silk, satin, velvet, and cotton scrunchies in Pakistan. BerryBabes.me offers stylish, hair-friendly scrunchies with fast delivery." />
+  <meta name="description" content="Shop premium silk, satin, and cotton scrunchies in Pakistan. BerryBabes.me offers stylish, hair-friendly scrunchies with fast delivery." />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://berrybabes.me/" />
   <meta property="og:type" content="website" />
@@ -14,7 +14,7 @@
   <meta property="og:image" content="https://berrybabes.me/images/img4.png" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Premium Scrunchies in Pakistan | BerryBabes.me" />
-  <meta name="twitter:description" content="Shop premium silk, satin, velvet, and cotton scrunchies at BerryBabes.me." />
+  <meta name="twitter:description" content="Shop premium silk, satin, and cotton scrunchies at BerryBabes.me." />
   <meta name="twitter:image" content="https://berrybabes.me/images/img4.png" />
   <link rel="icon" type="image/png" href="images/img4.png" />
   <script type="application/ld+json">
@@ -24,7 +24,7 @@
       "name": "BerryBabes.me",
       "url": "https://berrybabes.me/",
       "image": "https://berrybabes.me/images/img4.png",
-      "telephone": "+92 3103859992",
+      "telephone": "+92 3176006899",
       "priceRange": "PKR",
       "address": {
         "@type": "PostalAddress",
@@ -32,7 +32,7 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 </head>
@@ -85,7 +85,7 @@
   <section class="hero" id="home">
     <div class="slider" id="slider">
 
-      <div class="slide slide--img4 active" style="background-image: url('images/img4.png')">
+      <div class="slide slide--img4 active" style="background-image: url('images/hero slider (1).png')">
         <div class="slide__overlay"></div>
         <div class="slide__content">
           <span class="slide__tag">Featured Drop</span>
@@ -95,17 +95,17 @@
         </div>
       </div>
 
-      <div class="slide" style="background-image: url('images/hehe.png')">
+      <div class="slide" style="background-image: url('images/hero slider (2).png')">
         <div class="slide__overlay"></div>
         <div class="slide__content">
           <span class="slide__tag">Best Sellers</span>
-          <h1 class="slide__title">Velvet Luxe</h1>
-          <p class="slide__desc">Our signature velvet collection — buttery soft textures in 24 stunning shades.</p>
+          <h1 class="slide__title">Silk Luxe</h1>
+          <p class="slide__desc">Our signature silk collection with buttery-soft textures in stunning shades.</p>
           <a href="#products" class="btn btn--primary">Explore Now</a>
         </div>
       </div>
 
-      <div class="slide" style="background-image: url('images/haha.png')">
+      <div class="slide" style="background-image: url('images/hero slider (3).png')">
         <div class="slide__overlay"></div>
         <div class="slide__content">
           <span class="slide__tag">Limited Edition</span>
@@ -127,6 +127,7 @@
 
     <!-- Dots -->
     <div class="slider__dots" id="sliderDots"></div>
+    <div class="slider__swipe-hint" id="sliderSwipeHint">Swipe to explore</div>
   </section>
 
   <!-- ===== PERKS BAR ===== -->
@@ -211,8 +212,7 @@
       <div class="filter-btns">
         <button class="filter-btn active" data-filter="all">All</button>
         <button class="filter-btn" data-filter="silk">Silk</button>
-        <button class="filter-btn" data-filter="velvet">Velvet</button>
-        <button class="filter-btn" data-filter="satin">Satin</button>
+        <button class="filter-btn" data-filter="printed">Printed</button>
       </div>
 
       <div class="products__grid" id="productsGrid">
@@ -220,11 +220,11 @@
         <div class="product-card" data-category="silk" data-product-id="silk-scrunchie">
           <div class="product-card__img-wrap">
             <a href="product.html?id=silk-scrunchie" class="product-link">
-              <img src="images/1.jpeg" alt="Mulberry Silk Scrunchie" />
+              <img src="images/golden pearl diff.jpeg" alt="Golden Pearl Silk" />
             </a>
             <span class="product-card__badge">Featured</span>
             <div class="product-card__actions">
-              <button class="add-cart-btn" onclick="addToCart('Silk Scrunchie', 150)">
+              <button class="add-cart-btn" onclick="addToCart('Golden Pearl Silk', 150)">
                 <i class="fas fa-shopping-bag"></i> Add to Cart
               </button>
               <button class="wish-btn"><i class="far fa-heart"></i></button>
@@ -232,47 +232,48 @@
           </div>
           <div class="product-card__info">
             <span class="product-card__cat">Silk</span>
-            <h3 class="product-card__name"><a href="product.html?id=silk-scrunchie" class="product-link">Silk Scrunchie</a></h3>
+            <h3 class="product-card__name"><a href="product.html?id=silk-scrunchie" class="product-link">Golden Pearl Silk</a></h3>
             <p class="product-card__price">Pkr 150</p>
           </div>
         </div>
 
-        <div class="product-card" data-category="velvet" data-product-id="velvet-rose">
+        <div class="product-card" data-category="silk" data-product-id="pearl-collection">
           <div class="product-card__img-wrap">
-            <a href="product.html?id=velvet-rose" class="product-link">
-              <img src="images/2.jpeg" alt="Velvet Rose Scrunchie" />
+            <a href="product.html?id=pearl-collection" class="product-link">
+              <img src="images/pearl black.jpeg" alt="Pearl Collection" />
             </a>
     
             <span class="product-card__badge">Featured</span>
             <div class="product-card__actions">
-              <button class="add-cart-btn" onclick="addToCart('Velvet Rose Scrunchie', 150)">
+              <button class="add-cart-btn" onclick="addToCart('Pearl Collection', 150)">
                 <i class="fas fa-shopping-bag"></i> Add to Cart
               </button>
               <button class="wish-btn"><i class="far fa-heart"></i></button>
             </div>
           </div>
           <div class="product-card__info">
-            <span class="product-card__cat">Velvet</span>
-            <h3 class="product-card__name"><a href="product.html?id=velvet-rose" class="product-link">Velvet Rose Scrunchie</a></h3>
+            <span class="product-card__cat">Silk</span>
+            <h3 class="product-card__name"><a href="product.html?id=pearl-collection" class="product-link">Pearl Collection</a></h3>
             <p class="product-card__price">Pkr 150</p>
           </div>
         </div>
 
-        <div class="product-card" data-category="cotton" data-product-id="cotton-classic">
+        <div class="product-card" data-category="printed" data-product-id="cotton-classic">
           <div class="product-card__img-wrap">
             <a href="product.html?id=cotton-classic" class="product-link">
-              <img src="images\2.jpeg" alt="Organic Cotton Classic" />
+              <img src="images/printed fabric.jpeg" alt="Printed Fabric Set" />
             </a>
+            <span class="product-card__badge">Printed</span>
             <div class="product-card__actions">
-              <button class="add-cart-btn" onclick="addToCart('Organic Cotton Classic', 150)">
+              <button class="add-cart-btn" onclick="addToCart('Printed Fabric Set', 150)">
                 <i class="fas fa-shopping-bag"></i> Add to Cart
               </button>
               <button class="wish-btn"><i class="far fa-heart"></i></button>
             </div>
           </div>
           <div class="product-card__info">
-            <span class="product-card__cat">Cotton</span>
-            <h3 class="product-card__name"><a href="product.html?id=cotton-classic" class="product-link">Organic Cotton</a></h3>
+            <span class="product-card__cat">Printed</span>
+            <h3 class="product-card__name"><a href="product.html?id=cotton-classic" class="product-link">Printed Fabric Set</a></h3>
             <p class="product-card__price">Pkr 150</p>
           </div>
         </div>
@@ -280,11 +281,11 @@
         <div class="product-card" data-category="satin" data-product-id="satin-dream">
           <div class="product-card__img-wrap">
             <a href="product.html?id=satin-dream" class="product-link">
-              <img src="images/3.jpeg" alt="Satin Dream Scrunchie" />
+              <img src="images/skinsatin plain.jpg" alt="Skin Satin Set" />
             </a>
             <span class="product-card__badge">Featured</span>
             <div class="product-card__actions">
-              <button class="add-cart-btn" onclick="addToCart('Satin Dream Scrunchie', 150)">
+              <button class="add-cart-btn" onclick="addToCart('Skin Satin Set', 150)">
                 <i class="fas fa-shopping-bag"></i> Add to Cart
               </button>
               <button class="wish-btn"><i class="far fa-heart"></i></button>
@@ -292,26 +293,7 @@
           </div>
           <div class="product-card__info">
             <span class="product-card__cat">Satin</span>
-            <h3 class="product-card__name"><a href="product.html?id=satin-dream" class="product-link">Satin Scrunchie</a></h3>
-            <p class="product-card__price">Pkr 150</p>
-          </div>
-        </div>
-
-        <div class="product-card" data-category="velvet" data-product-id="velvet-midnight">
-          <div class="product-card__img-wrap">
-            <a href="product.html?id=velvet-midnight" class="product-link">
-              <img src="images/3.jpeg" alt="Midnight Velvet" />
-            </a>
-            <div class="product-card__actions">
-              <button class="add-cart-btn" onclick="addToCart('Midnight Velvet', 150)">
-                <i class="fas fa-shopping-bag"></i> Add to Cart
-              </button>
-              <button class="wish-btn"><i class="far fa-heart"></i></button>
-            </div>
-          </div>
-          <div class="product-card__info">
-            <span class="product-card__cat">Velvet</span>
-            <h3 class="product-card__name"><a href="product.html?id=velvet-midnight" class="product-link">Midnight Velvet</a></h3>
+            <h3 class="product-card__name"><a href="product.html?id=satin-dream" class="product-link">Skin Satin</a></h3>
             <p class="product-card__price">Pkr 150</p>
           </div>
         </div>
@@ -319,11 +301,11 @@
         <div class="product-card" data-category="silk" data-product-id="silk-bundle">
           <div class="product-card__img-wrap">
             <a href="product.html?id=silk-bundle" class="product-link">
-              <img src="images/3.jpeg" alt="Blush Silk Bundle" />
+              <img src="images/black plain silk.jpeg" alt="Black Silk Scrunchie" />
             </a>
-            <span class="product-card__badge">Bundle</span>
+            <span class="product-card__badge">Plain</span>
             <div class="product-card__actions">
-              <button class="add-cart-btn" onclick="addToCart('Blush Silk Bundle', 150)">
+              <button class="add-cart-btn" onclick="addToCart('Black Silk Scrunchie', 150)">
                 <i class="fas fa-shopping-bag"></i> Add to Cart
               </button>
               <button class="wish-btn"><i class="far fa-heart"></i></button>
@@ -331,27 +313,27 @@
           </div>
           <div class="product-card__info">
             <span class="product-card__cat">Silk</span>
-            <h3 class="product-card__name"><a href="product.html?id=silk-bundle" class="product-link">Blush Silk Bundle</a></h3>
+            <h3 class="product-card__name"><a href="product.html?id=silk-bundle" class="product-link">Black Silk Scrunchie</a></h3>
             <p class="product-card__price">Pkr 150</p>
           </div>
         </div>
         
-        <div class="product-card" data-category="satin" data-product-id="spring-bloom">
+        <div class="product-card" data-category="silk" data-product-id="spring-bloom">
           <div class="product-card__img-wrap">
             <a href="product.html?id=spring-bloom" class="product-link">
-              <img src="images/3.jpeg" alt="Spring Bloom Collection" />
+              <img src="images/1.jpeg" alt="Classic Silk Edit" />
             </a>
-            <span class="product-card__badge">Limited</span>
+            <span class="product-card__badge">Classic</span>
             <div class="product-card__actions">
-              <button class="add-cart-btn" onclick="addToCart('Spring Bloom Collection', 150)">
+              <button class="add-cart-btn" onclick="addToCart('Classic Silk Edit', 150)">
                 <i class="fas fa-shopping-bag"></i> Add to Cart
               </button>
               <button class="wish-btn"><i class="far fa-heart"></i></button>
             </div>
           </div>
           <div class="product-card__info">
-            <span class="product-card__cat">Seasonal</span>
-            <h3 class="product-card__name"><a href="product.html?id=spring-bloom" class="product-link">Spring Bloom Collection</a></h3>
+            <span class="product-card__cat">Silk</span>
+            <h3 class="product-card__name"><a href="product.html?id=spring-bloom" class="product-link">Classic Silk Edit</a></h3>
             <p class="product-card__price">Pkr 150</p>
           </div>
         </div>
@@ -364,7 +346,7 @@
   <section class="about section" id="about">
     <div class="container about__inner">
       <div class="about__img-wrap">
-        <img src="images/3.jpeg" alt="About Scrunchie Studio" />
+        <img src="images/golden pearl diff 2.jpeg" alt="About Scrunchie Studio" />
       </div>
       <div class="about__content">
         <span class="section__tag">Our Story</span>
@@ -430,8 +412,8 @@ Every scrunchie is made to add a little fun, color, and confidence to your every
         <div class="footer__col">
           <h4 class="footer__heading">Contact Us</h4>
           <ul class="footer__list footer__list--contact">
-            <li>hello@scrunchie.studio</li>
-            <li>+92 3103859992</li>
+            <li><a href="mailto:berrybabes.me@gmail.com">berrybabes.me@gmail.com</a></li>
+            <li><a href="tel:+923176006899">03176006899</a></li>
             <li>Mon – Fri: 9am – 6pm EST</li>
           </ul>
           <div class="social-icons">
@@ -467,7 +449,8 @@ Every scrunchie is made to add a little fun, color, and confidence to your every
     <i class="fas fa-chevron-up"></i>
   </button>
 
-  <script src="cart.js"></script>
-  <script src="script.js"></script>
+  <script src="assets/js/cart.js"></script>
+  <script src="assets/js/products-data.js"></script>
+  <script src="assets/js/script.js"></script>
 </body>
 </html>

@@ -1,0 +1,18 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Publish: GitHub -> Railway",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "scripts/publish.ps1"
+      ],
+      "problemMatcher": [],
+      "group": "none"
+    }
+  ]
+}

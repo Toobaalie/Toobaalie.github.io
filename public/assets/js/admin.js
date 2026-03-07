@@ -36,6 +36,7 @@ function orderCard(order) {
         <p><strong>Name:</strong> ${escapeHtml(order.fullName)}</p>
         <p><strong>Phone:</strong> ${escapeHtml(order.phone)}</p>
         <p><strong>Email:</strong> ${escapeHtml(order.email || '-')}</p>
+        <p><strong>State:</strong> ${escapeHtml(order.state || '-')}</p>
         <p><strong>City:</strong> ${escapeHtml(order.city)}</p>
         <p><strong>Postal Code:</strong> ${escapeHtml(order.postalCode)}</p>
       </div>
@@ -53,6 +54,34 @@ function subscriberCard(subscriber) {
       <div class="admin-order-card__top">
         <h3>${escapeHtml(subscriber.email)}</h3>
         <span>${new Date(subscriber.createdAt).toLocaleString()}</span>
+      </div>
+    </article>
+  `;
+}
+
+function reviewCard(review) {
+  const statusClass = review.approved === false ? '' : 'admin-review-status--approved';
+  const statusText = review.approved === false ? 'Pending' : 'Approved';
+  const imageHtml = review.imageData
+    ? `<div class="admin-review-image"><img src="${review.imageData}" alt="Review by ${escapeHtml(review.name)}" /></div>`
+    : '';
+
+  return `
+    <article class="admin-order-card" data-review-id="${escapeHtml(review.id)}">
+      <div class="admin-order-card__top">
+        <h3>${escapeHtml(review.name)}</h3>
+        <span>${new Date(review.createdAt).toLocaleString()}</span>
+      </div>
+      <div class="admin-review-meta">
+        <span><strong>Product:</strong> ${escapeHtml(review.productId)}</span>
+        <span><strong>Rating:</strong> ${'★'.repeat(Number(review.rating) || 0)}</span>
+        <span class="admin-review-status ${statusClass}">${statusText}</span>
+      </div>
+      <p>${escapeHtml(review.review)}</p>
+      ${imageHtml}
+      <div class="admin-review-actions">
+        <button type="button" class="admin-review-btn" data-review-action="approve">Approve</button>
+        <button type="button" class="admin-review-btn" data-review-action="hide">Hide</button>
       </div>
     </article>
   `;
@@ -92,6 +121,23 @@ function renderSubscribers(subscribers) {
   container.innerHTML = subscribers.map(subscriberCard).join('');
 }
 
+function renderReviews(reviews) {
+  const container = document.getElementById('adminReviews');
+  if (!container) return;
+
+  if (!reviews.length) {
+    container.innerHTML = `
+      <div class="cart-empty">
+        <h2>No customer reviews yet</h2>
+        <p>Customer submitted reviews will appear here for moderation.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = reviews.map(reviewCard).join('');
+}
+
 function toCsv(rows) {
   const escapedRows = rows.map(cells =>
     cells
@@ -121,6 +167,7 @@ function ordersToCsvRows(orders) {
     'phone',
     'email',
     'address',
+    'state',
     'city',
     'postalCode',
     'notes',
@@ -134,6 +181,7 @@ function ordersToCsvRows(orders) {
     order.phone,
     order.email,
     order.address,
+    order.state,
     order.city,
     order.postalCode,
     order.notes,
@@ -154,23 +202,39 @@ function subscribersToCsvRows(subscribers) {
 }
 
 async function loadAdminData() {
-  const [ordersResponse, subscribersResponse] = await Promise.all([
+  const [ordersResponse, subscribersResponse, reviewsResponse] = await Promise.all([
     fetch('/api/orders'),
-    fetch('/api/subscribers')
+    fetch('/api/subscribers'),
+    fetch('/api/reviews?includeAll=1')
   ]);
 
-  if (!ordersResponse.ok || !subscribersResponse.ok) {
+  if (!ordersResponse.ok || !subscribersResponse.ok || !reviewsResponse.ok) {
     throw new Error('Unable to load admin data');
   }
 
   const ordersPayload = await ordersResponse.json();
   const subscribersPayload = await subscribersResponse.json();
+  const reviewsPayload = await reviewsResponse.json();
   const orders = ordersPayload.orders || [];
   const subscribers = subscribersPayload.subscribers || [];
+  const reviews = reviewsPayload.reviews || [];
 
   renderOrders(orders);
   renderSubscribers(subscribers);
-  return { orders, subscribers };
+  renderReviews(reviews);
+  return { orders, subscribers, reviews };
+}
+
+async function moderateReview(reviewId, approved) {
+  const response = await fetch(`/api/reviews/${encodeURIComponent(reviewId)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ approved })
+  });
+
+  if (!response.ok) {
+    throw new Error('Unable to update review status');
+  }
 }
 
 async function clearCollection(endpoint, label) {
@@ -193,6 +257,7 @@ function setupActions(getState, refreshData) {
   const exportSubscribersButton = document.getElementById('exportSubscribers');
   const clearOrdersButton = document.getElementById('clearOrders');
   const clearSubscribersButton = document.getElementById('clearSubscribers');
+  const reviewsContainer = document.getElementById('adminReviews');
 
   if (refreshButton) {
     refreshButton.addEventListener('click', async () => {
@@ -246,18 +311,42 @@ function setupActions(getState, refreshData) {
       }
     });
   }
+
+  if (reviewsContainer) {
+    reviewsContainer.addEventListener('click', async event => {
+      const button = event.target.closest('[data-review-action]');
+      if (!button) return;
+
+      const card = button.closest('[data-review-id]');
+      if (!card) return;
+
+      const reviewId = card.dataset.reviewId;
+      const action = button.dataset.reviewAction;
+      const approved = action === 'approve';
+
+      try {
+        await moderateReview(reviewId, approved);
+        await refreshData();
+        setStatus(approved ? 'Review approved.' : 'Review hidden from storefront.');
+      } catch {
+        setStatus('Unable to update review status.', true);
+      }
+    });
+  }
 }
 
 (function initAdminOrders() {
   const state = {
     orders: [],
-    subscribers: []
+    subscribers: [],
+    reviews: []
   };
 
   async function refreshData() {
     const data = await loadAdminData();
     state.orders = data.orders;
     state.subscribers = data.subscribers;
+    state.reviews = data.reviews;
   }
 
   setupActions(() => state, refreshData);
@@ -265,6 +354,7 @@ function setupActions(getState, refreshData) {
   refreshData().catch(() => {
     const ordersContainer = document.getElementById('adminOrders');
     const subscribersContainer = document.getElementById('adminSubscribers');
+    const reviewsContainer = document.getElementById('adminReviews');
 
     if (ordersContainer) {
       ordersContainer.innerHTML = `
@@ -279,6 +369,15 @@ function setupActions(getState, refreshData) {
       subscribersContainer.innerHTML = `
         <div class="cart-empty">
           <h2>Unable to load subscribers</h2>
+          <p>Make sure the backend server is running.</p>
+        </div>
+      `;
+    }
+
+    if (reviewsContainer) {
+      reviewsContainer.innerHTML = `
+        <div class="cart-empty">
+          <h2>Unable to load reviews</h2>
           <p>Make sure the backend server is running.</p>
         </div>
       `;

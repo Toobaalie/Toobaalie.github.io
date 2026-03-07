@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Scrunchie Product Details | BerryBabes.me</title>
-  <meta name="description" content="View scrunchie details, colors, and reviews. Find your perfect silk, satin, velvet, or cotton scrunchie at BerryBabes.me." />
+  <meta name="description" content="View scrunchie details, colors, and reviews. Find your perfect silk, satin, or cotton scrunchie at BerryBabes.me." />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://berrybabes.me/product.html" />
   <meta property="og:type" content="product" />
@@ -17,7 +17,7 @@
   <meta name="twitter:description" content="Explore colors and styles for your next favorite scrunchie." />
   <meta name="twitter:image" content="https://berrybabes.me/images/1.jpeg" />
   <link rel="icon" type="image/png" href="images/img4.png" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 </head>
@@ -62,12 +62,55 @@
         </div>
         <div class="reviews__grid" id="reviewsGrid"></div>
       </section>
+
+      <section class="customer-showcase section" id="customerShowcaseSection">
+        <div class="section__header reviews__header">
+          <span class="section__tag">Community Gallery</span>
+          <h2 class="section__title">Share Your Look</h2>
+          <p class="section__desc">Post your review and optional photo to inspire other customers.</p>
+        </div>
+
+        <div class="customer-showcase__layout">
+          <form class="customer-review-form" id="customerReviewForm">
+            <div class="form-row">
+              <input type="text" id="customerName" maxlength="50" placeholder="Your name" required />
+              <select id="customerRating" required>
+                <option value="" disabled selected>Your rating</option>
+                <option value="5">5 - Excellent</option>
+                <option value="4">4 - Very good</option>
+                <option value="3">3 - Good</option>
+                <option value="2">2 - Fair</option>
+                <option value="1">1 - Poor</option>
+              </select>
+            </div>
+            <textarea id="customerReviewText" rows="4" maxlength="500" placeholder="Share your experience (10-500 characters)" required></textarea>
+            <div class="customer-review-form__upload">
+              <label for="customerPhoto">Add photo (optional)</label>
+              <input type="file" id="customerPhoto" accept="image/png,image/jpeg,image/webp" />
+              <small>PNG, JPG, or WebP. Recommended under 700KB.</small>
+            </div>
+            <button type="submit" class="btn btn--primary">Submit Review</button>
+          </form>
+
+          <div class="customer-gallery" id="customerGallery"></div>
+        </div>
+      </section>
+
+      <section class="more-products section" id="moreProductsSection">
+        <div class="section__header reviews__header">
+          <span class="section__tag">Keep Shopping</span>
+          <h2 class="section__title">More Products</h2>
+          <p class="section__desc">Explore more styles from the full BerryBabes collection.</p>
+        </div>
+        <div class="products__grid" id="moreProductsGrid"></div>
+      </section>
     </div>
   </main>
 
   <div class="toast" id="toast"></div>
 
-  <script src="cart.js"></script>
-  <script src="product.js"></script>
+  <script src="assets/js/cart.js"></script>
+  <script src="assets/js/products-data.js"></script>
+  <script src="assets/js/product.js"></script>
 </body>
 </html>

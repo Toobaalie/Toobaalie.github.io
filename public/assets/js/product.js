@@ -1,0 +1,403 @@
+const products = window.BerryBabesProducts || {};
+
+let selectedColor = '';
+let selectedQuantity = 1;
+let selectedImage = '';
+const MAX_ITEM_QUANTITY = 10;
+
+function getProductFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  return products[id] || products['silk-scrunchie'];
+}
+
+function getSelectedColorFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  return String(params.get('color') || '').trim();
+}
+
+function stars(rating) {
+  return '★'.repeat(rating) + '☆'.repeat(5 - rating);
+}
+
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+  toast.textContent = message;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function updateCartBadge() {
+  const badge = document.getElementById('cartBadge');
+  if (!badge) return;
+  const count = window.CartStore ? window.CartStore.getCartCount() : 0;
+  badge.textContent = count;
+}
+
+function updateWishlistBadge() {
+  const badge = document.getElementById('wishlistBadge');
+  if (!badge) return;
+
+  try {
+    const raw = localStorage.getItem('berrybabes_wishlist');
+    const parsed = raw ? JSON.parse(raw) : [];
+    badge.textContent = Array.isArray(parsed) ? parsed.length : 0;
+  } catch {
+    badge.textContent = 0;
+  }
+}
+
+function getImageByColor(product, color) {
+  if (product.colorImages && product.colorImages[color]) {
+    return product.colorImages[color];
+  }
+  return product.image;
+}
+
+function renderProduct(product) {
+  const detail = document.getElementById('productDetail');
+  if (!detail) return;
+
+  const preferredColor = getSelectedColorFromUrl();
+  selectedColor = product.colors.includes(preferredColor) ? preferredColor : product.colors[0];
+  selectedImage = getImageByColor(product, selectedColor);
+  selectedQuantity = 1;
+  const thumbImages = Array.isArray(product.galleryImages) && product.galleryImages.length
+    ? product.galleryImages
+    : product.colors.map(color => getImageByColor(product, color));
+
+  detail.innerHTML = `
+    <div class="product-detail__media">
+      <img src="${selectedImage}" alt="${product.name}" id="detailMainImage" />
+      <div class="product-detail__thumbs" id="detailThumbs">
+        ${thumbImages
+          .map((image, index) => {
+            const isActive = image === selectedImage || (index === 0 && !thumbImages.includes(selectedImage));
+            return `
+              <button type="button" class="product-detail__thumb ${isActive ? 'active' : ''}" data-image="${image}" aria-label="${product.name} view ${index + 1}">
+                <img src="${image}" alt="${product.name} view ${index + 1}" />
+              </button>
+            `;
+          })
+          .join('')}
+      </div>
+    </div>
+    <div class="product-detail__content">
+      <span class="product-card__cat">${product.category}</span>
+      <h1 class="product-detail__title">${product.name}</h1>
+      <p class="product-detail__price">Pkr ${product.price}</p>
+      <p class="product-detail__desc">${product.description}</p>
+
+      <div class="product-detail__colors">
+        <h3>Choose Color</h3>
+        <div class="color-options" id="colorOptions">
+          ${product.colors
+            .map(
+              (color, index) =>
+                `<button class="color-option ${color === selectedColor ? 'active' : ''}" data-color="${color}">${color}</button>`
+            )
+            .join('')}
+        </div>
+      </div>
+
+      <div class="product-detail__qty">
+        <h3>Quantity</h3>
+        <div class="qty-control">
+          <button class="qty-btn" id="qtyMinus" aria-label="Decrease quantity">-</button>
+          <span class="qty-value" id="qtyValue">1</span>
+          <button class="qty-btn" id="qtyPlus" aria-label="Increase quantity">+</button>
+        </div>
+      </div>
+
+      <button class="btn btn--primary product-detail__add" id="detailAddToCart">
+        <i class="fas fa-shopping-bag"></i> Add to Cart
+      </button>
+    </div>
+  `;
+
+  const colorButtons = detail.querySelectorAll('.color-option');
+  const thumbButtons = detail.querySelectorAll('.product-detail__thumb');
+  const mainImage = document.getElementById('detailMainImage');
+
+  function setActiveColor(color) {
+    selectedColor = color;
+    selectedImage = getImageByColor(product, selectedColor);
+
+    colorButtons.forEach(item => {
+      item.classList.toggle('active', item.dataset.color === selectedColor);
+    });
+
+    thumbButtons.forEach(item => {
+      item.classList.toggle('active', item.dataset.image === selectedImage);
+    });
+
+    if (mainImage) {
+      mainImage.src = selectedImage;
+      mainImage.alt = `${product.name} - ${selectedColor}`;
+    }
+  }
+
+  colorButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      setActiveColor(button.dataset.color);
+    });
+  });
+
+  thumbButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      selectedImage = button.dataset.image;
+      thumbButtons.forEach(item => item.classList.remove('active'));
+      button.classList.add('active');
+      if (mainImage) {
+        mainImage.src = selectedImage;
+        mainImage.alt = `${product.name} - ${selectedColor}`;
+      }
+    });
+  });
+
+  const addButton = document.getElementById('detailAddToCart');
+  const qtyValue = document.getElementById('qtyValue');
+  const qtyMinus = document.getElementById('qtyMinus');
+  const qtyPlus = document.getElementById('qtyPlus');
+
+  qtyMinus.addEventListener('click', () => {
+    selectedQuantity = Math.max(1, selectedQuantity - 1);
+    qtyValue.textContent = selectedQuantity;
+  });
+
+  qtyPlus.addEventListener('click', () => {
+    if (selectedQuantity >= MAX_ITEM_QUANTITY) {
+      showToast('Maximum quantity is 10');
+      return;
+    }
+    selectedQuantity += 1;
+    qtyValue.textContent = selectedQuantity;
+  });
+
+  addButton.addEventListener('click', () => {
+    if (window.CartStore) {
+      window.CartStore.addItem({
+        id: window.currentProductId,
+        name: product.name,
+        price: product.price,
+        color: selectedColor,
+        image: selectedImage,
+        quantity: selectedQuantity
+      });
+    }
+    updateCartBadge();
+    showToast(`🛍️ ${product.name} (${selectedColor}) x${selectedQuantity} added to cart`);
+  });
+}
+
+function renderReviews(product) {
+  const reviewsGrid = document.getElementById('reviewsGrid');
+  if (!reviewsGrid) return;
+
+  reviewsGrid.innerHTML = product.reviews
+    .map(
+      review => `
+      <article class="review-card">
+        <div class="review-card__top">
+          <h3>${review.name}</h3>
+          <span>${stars(review.rating)}</span>
+        </div>
+        <p>${review.text}</p>
+      </article>
+    `
+    )
+    .join('');
+}
+
+function renderMoreProducts(currentProductId) {
+  const grid = document.getElementById('moreProductsGrid');
+  if (!grid) return;
+
+  const cardsHtml = Object.entries(products)
+    .map(([id, product]) => {
+      const badge = id === currentProductId
+        ? '<span class="product-card__badge">Current</span>'
+        : '';
+
+      return `
+        <article class="product-card" data-product-id="${id}">
+          <div class="product-card__img-wrap">
+            <a href="product.html?id=${encodeURIComponent(id)}" class="product-link">
+              <img src="${product.image}" alt="${product.name}" />
+            </a>
+            ${badge}
+          </div>
+          <div class="product-card__info">
+            <span class="product-card__cat">${product.category}</span>
+            <h3 class="product-card__name">
+              <a href="product.html?id=${encodeURIComponent(id)}" class="product-link">${product.name}</a>
+            </h3>
+            <p class="product-card__price">Pkr ${product.price}</p>
+          </div>
+        </article>
+      `;
+    })
+    .join('');
+
+  grid.innerHTML = cardsHtml;
+}
+
+function formatReviewDate(isoDate) {
+  const date = new Date(isoDate);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('en-PK', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function readImageFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error('Unable to read image file'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderCustomerGallery(reviews) {
+  const gallery = document.getElementById('customerGallery');
+  if (!gallery) return;
+
+  if (!Array.isArray(reviews) || !reviews.length) {
+    gallery.innerHTML = `
+      <div class="customer-gallery__empty">
+        <h3>Be the first to post</h3>
+        <p>Your review and photo can help other shoppers choose their favorite style.</p>
+      </div>
+    `;
+    return;
+  }
+
+  gallery.innerHTML = reviews
+    .map(item => {
+      const image = item.imageData
+        ? `<div class="customer-gallery-card__media"><img src="${item.imageData}" alt="${item.name} review photo" /></div>`
+        : '';
+
+      return `
+        <article class="customer-gallery-card">
+          ${image}
+          <div class="customer-gallery-card__body">
+            <div class="customer-gallery-card__top">
+              <h3>${item.name}</h3>
+              <span>${stars(Number(item.rating) || 0)}</span>
+            </div>
+            <p>${item.review}</p>
+            <time datetime="${item.createdAt}">${formatReviewDate(item.createdAt)}</time>
+          </div>
+        </article>
+      `;
+    })
+    .join('');
+}
+
+async function loadCustomerReviews(productId) {
+  try {
+    const response = await fetch(`/api/reviews?productId=${encodeURIComponent(productId)}`);
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || 'Unable to load customer reviews');
+    }
+    renderCustomerGallery(payload.reviews || []);
+  } catch (error) {
+    const gallery = document.getElementById('customerGallery');
+    if (gallery) {
+      gallery.innerHTML = `
+        <div class="customer-gallery__empty">
+          <h3>Gallery is temporarily unavailable</h3>
+          <p>Please try again in a moment.</p>
+        </div>
+      `;
+    }
+  }
+}
+
+function initCustomerReviewForm(productId) {
+  const form = document.getElementById('customerReviewForm');
+  if (!form) return;
+
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+
+    const name = document.getElementById('customerName')?.value.trim() || '';
+    const rating = Number(document.getElementById('customerRating')?.value || 0);
+    const review = document.getElementById('customerReviewText')?.value.trim() || '';
+    const photoInput = document.getElementById('customerPhoto');
+    const file = photoInput && photoInput.files ? photoInput.files[0] : null;
+
+    if (!name || !rating || review.length < 10) {
+      showToast('Please complete name, rating, and a review of at least 10 characters');
+      return;
+    }
+
+    let imageData = '';
+    if (file) {
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        showToast('Only PNG, JPG, or WebP images are allowed');
+        return;
+      }
+
+      if (file.size > 700 * 1024) {
+        showToast('Image must be under 700KB');
+        return;
+      }
+
+      try {
+        imageData = await readImageFileAsDataUrl(file);
+      } catch {
+        showToast('Could not read the selected image');
+        return;
+      }
+    }
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+
+    try {
+      const response = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId,
+          name,
+          rating,
+          review,
+          imageData
+        })
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.error || 'Unable to submit your review');
+      }
+
+      showToast('Thank you. Your review is submitted and awaiting approval.');
+      form.reset();
+      await loadCustomerReviews(productId);
+    } catch (error) {
+      showToast(`⚠️ ${error.message}`);
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  });
+}
+
+(function initProductPage() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  window.currentProductId = id && products[id] ? id : 'silk-scrunchie';
+  localStorage.setItem('berrybabes_last_viewed', window.currentProductId);
+  const product = products[window.currentProductId];
+  updateCartBadge();
+  updateWishlistBadge();
+  renderProduct(product);
+  renderReviews(product);
+  initCustomerReviewForm(window.currentProductId);
+  loadCustomerReviews(window.currentProductId);
+  renderMoreProducts(window.currentProductId);
+})();

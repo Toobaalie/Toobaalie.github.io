@@ -14,7 +14,7 @@
   <meta property="og:image" content="https://berrybabes.me/images/img4.png" />
   <meta name="twitter:card" content="summary" />
   <link rel="icon" type="image/png" href="images/img4.png" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 </head>
@@ -65,10 +65,29 @@
             <input type="email" id="email" placeholder="Email Address" required />
             <textarea id="address" rows="4" placeholder="Street Address" required></textarea>
             <div class="form-row">
-              <input type="text" id="city" placeholder="City" required />
+              <select id="state" required>
+                <option value="" disabled selected>Select State / Region</option>
+                <option value="Punjab">Punjab</option>
+                <option value="Sindh">Sindh</option>
+                <option value="Khyber Pakhtunkhwa">Khyber Pakhtunkhwa</option>
+                <option value="Balochistan">Balochistan</option>
+                <option value="Islamabad Capital Territory">Islamabad Capital Territory</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="checkout-field checkout-city-field">
+                <input type="text" id="city" placeholder="Select state first" autocomplete="off" required disabled />
+                <div class="city-suggestions" id="citySuggestions" role="listbox" aria-label="City suggestions"></div>
+              </div>
               <input type="text" id="postalCode" placeholder="Postal Code" required />
             </div>
             <textarea id="notes" rows="3" placeholder="Order notes (optional)"></textarea>
+
+            <div class="checkout-payment">
+              <h3>Payment Method</h3>
+              <p class="checkout-payment__single">Cash on Delivery (COD)</p>
+              <input type="hidden" id="paymentMethod" value="cod" />
+            </div>
 
             <button type="submit" class="btn btn--primary checkout-submit" id="placeOrderBtn">
               <i class="fas fa-check-circle"></i> Place Order
@@ -83,7 +102,7 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="cart.js"></script>
-  <script src="checkout.js"></script>
+  <script src="assets/js/cart.js"></script>
+  <script src="assets/js/checkout.js"></script>
 </body>
 </html>

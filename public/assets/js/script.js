@@ -218,18 +218,18 @@ function handleQuiz(e) {
 
   const score = {
     'silk-scrunchie': 0,
-    'velvet-rose': 0,
+    'pearl-collection': 0,
     'cotton-classic': 0,
     'satin-dream': 0,
-    'velvet-midnight': 0
+    'silk-bundle': 0
   };
 
   if (vibe === 'soft') {
     score['silk-scrunchie'] += 3;
     score['satin-dream'] += 2;
   } else if (vibe === 'bold') {
-    score['velvet-midnight'] += 3;
-    score['velvet-rose'] += 2;
+    score['silk-bundle'] += 3;
+    score['pearl-collection'] += 2;
   } else {
     score['cotton-classic'] += 3;
     score['silk-scrunchie'] += 1;
@@ -240,31 +240,31 @@ function handleQuiz(e) {
     score['silk-scrunchie'] += 1;
   } else if (style === 'chic') {
     score['satin-dream'] += 2;
-    score['velvet-rose'] += 1;
+    score['pearl-collection'] += 1;
   } else {
-    score['velvet-midnight'] += 2;
-    score['velvet-rose'] += 2;
+    score['silk-bundle'] += 2;
+    score['pearl-collection'] += 2;
   }
 
   if (color === 'rose') {
-    score['velvet-rose'] += 3;
+    score['pearl-collection'] += 3;
     score['silk-scrunchie'] += 1;
   } else if (color === 'neutral') {
     score['cotton-classic'] += 2;
     score['satin-dream'] += 1;
   } else {
-    score['velvet-midnight'] += 3;
+    score['silk-bundle'] += 3;
     score['satin-dream'] += 1;
   }
 
   const topProductId = Object.keys(score).sort((a, b) => score[b] - score[a])[0];
 
   const productMeta = {
-    'silk-scrunchie': { name: 'Silk Scrunchie', note: 'Soft and elegant for everyday glam.' },
-    'velvet-rose': { name: 'Velvet Rose Scrunchie', note: 'Romantic tones with a rich finish.' },
-    'cotton-classic': { name: 'Organic Cotton', note: 'Minimal, breathable, and easy to style.' },
-    'satin-dream': { name: 'Satin Scrunchie', note: 'Glossy and chic for polished looks.' },
-    'velvet-midnight': { name: 'Midnight Velvet', note: 'Bold statement choice for standout outfits.' }
+    'silk-scrunchie': { name: 'Golden Pearl Silk', note: 'Elegant silk tones grouped in one product set.' },
+    'pearl-collection': { name: 'Pearl Collection', note: 'Multiple pearl shades grouped in one card.' },
+    'cotton-classic': { name: 'Printed Fabric Set', note: 'All printed variants are available in one product.' },
+    'satin-dream': { name: 'Skin Satin Set', note: 'Same style plain and studio views in one listing.' },
+    'silk-bundle': { name: 'Black Silk Scrunchie', note: 'Sleek black silk style that pairs with every look.' }
   };
 
   const match = productMeta[topProductId] || productMeta['silk-scrunchie'];
@@ -302,6 +302,7 @@ function handleQuiz(e) {
   const dotsContainer = document.getElementById('sliderDots');
   const prevBtn = document.getElementById('prevBtn');
   const nextBtn = document.getElementById('nextBtn');
+  const swipeHint = document.getElementById('sliderSwipeHint');
   if (!slides.length) return;
 
   let current = 0;
@@ -336,6 +337,10 @@ function handleQuiz(e) {
     autoPlay = setInterval(next, 6000);
   }
 
+  function hideSwipeHint() {
+    if (swipeHint) swipeHint.classList.remove('visible');
+  }
+
   prevBtn.addEventListener('click', () => { prev(); startAuto(); });
   nextBtn.addEventListener('click', () => { next(); startAuto(); });
 
@@ -347,19 +352,134 @@ function handleQuiz(e) {
 
   // Touch / swipe support
   let touchStartX = 0;
+  let touchStartY = 0;
   const slider = document.getElementById('slider');
+  if (swipeHint && window.matchMedia('(max-width: 768px)').matches) {
+    swipeHint.classList.add('visible');
+  }
+
+  prevBtn.addEventListener('click', hideSwipeHint);
+  nextBtn.addEventListener('click', hideSwipeHint);
+
   slider.addEventListener('touchstart', (e) => {
     touchStartX = e.changedTouches[0].clientX;
+    touchStartY = e.changedTouches[0].clientY;
   }, { passive: true });
   slider.addEventListener('touchend', (e) => {
-    const diff = touchStartX - e.changedTouches[0].clientX;
-    if (Math.abs(diff) > 50) {
-      diff > 0 ? next() : prev();
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    const diffX = touchStartX - touchEndX;
+    const diffY = touchStartY - touchEndY;
+
+    // Trigger swipe only when horizontal gesture is dominant.
+    if (Math.abs(diffX) > 45 && Math.abs(diffX) > Math.abs(diffY) * 1.2) {
+      diffX > 0 ? next() : prev();
       startAuto();
+      hideSwipeHint();
     }
   }, { passive: true });
 
+  dotsContainer.addEventListener('click', hideSwipeHint);
+
   startAuto();
+})();
+
+// ─── Home Products From Shared Data ───────────────────────────
+(function renderHomeProductsFromData() {
+  const productsGrid = document.getElementById('productsGrid');
+  const allProducts = window.BerryBabesProducts;
+  if (!productsGrid || !allProducts) return;
+
+  const badgeById = {
+    'silk-scrunchie': 'Featured',
+    'pearl-collection': '',
+    'cotton-classic': 'Printed',
+    'satin-dream': '',
+    'silk-bundle': 'Plain',
+    'spring-bloom': 'Classic'
+  };
+
+  function homeCategory(product) {
+    const normalized = (product.category || '').toLowerCase();
+    if (normalized === 'printed') {
+      return 'printed';
+    }
+    return 'silk';
+  }
+
+  function renderCard({ id, category, title, displayCategory, price, image, badge, defaultColor }) {
+    const safeName = title.replaceAll("'", "\\'");
+    const safeColor = (defaultColor || 'Default').replaceAll("'", "\\'");
+    const url = defaultColor
+      ? `product.html?id=${encodeURIComponent(id)}&color=${encodeURIComponent(defaultColor)}`
+      : `product.html?id=${encodeURIComponent(id)}`;
+    const badgeHtml = badge ? `<span class="product-card__badge">${badge}</span>` : '';
+
+    return `
+      <div class="product-card" data-category="${category}" data-product-id="${id}" data-product-url="${url}">
+        <div class="product-card__img-wrap">
+          <a href="${url}" class="product-link">
+            <img src="${image}" alt="${title}" />
+          </a>
+          ${badgeHtml}
+          <div class="product-card__actions">
+            <button class="add-cart-btn" onclick="addToCart('${safeName}', ${Number(price) || 150}, '${id}', '${safeColor}', '${image}')">
+              <i class="fas fa-shopping-bag"></i> Add to Cart
+            </button>
+            <button class="wish-btn"><i class="far fa-heart"></i></button>
+          </div>
+        </div>
+        <div class="product-card__info">
+          <span class="product-card__cat">${displayCategory}</span>
+          <h3 class="product-card__name"><a href="${url}" class="product-link">${title}</a></h3>
+          <p class="product-card__price">Pkr ${Number(price) || 150}</p>
+        </div>
+      </div>
+    `;
+  }
+
+  const cards = [];
+
+  Object.entries(allProducts).forEach(([id, product]) => {
+    const category = homeCategory(product);
+    const badge = badgeById[id] || '';
+
+    // Expand printed product into separate variant cards to show more options.
+    if (id === 'cotton-classic' && Array.isArray(product.colors) && product.colors.length) {
+      product.colors.forEach(color => {
+        cards.push(
+          renderCard({
+            id,
+            category,
+            title: color,
+            displayCategory: 'Printed',
+            price: product.price,
+            image: (product.colorImages && product.colorImages[color]) || product.image,
+            badge: 'Printed',
+            defaultColor: color
+          })
+        );
+      });
+      return;
+    }
+
+    cards.push(
+      renderCard({
+        id,
+        category,
+        title: product.name,
+        displayCategory: product.category,
+        price: product.price,
+        image: product.image,
+        badge,
+        defaultColor: ''
+      })
+    );
+  });
+
+  const html = cards.join('');
+
+  productsGrid.innerHTML = html;
 })();
 
 // ─── Filter Buttons ───────────────────────────────────────────
@@ -501,6 +621,12 @@ updateWishlistBadge();
   cards.forEach(card => {
     card.addEventListener('click', (event) => {
       if (event.target.closest('.add-cart-btn, .wish-btn, .product-card__actions, a')) {
+        return;
+      }
+
+      const productUrl = card.dataset.productUrl;
+      if (productUrl) {
+        window.location.href = productUrl;
         return;
       }
 

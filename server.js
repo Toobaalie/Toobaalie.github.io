@@ -7,10 +7,13 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
+const CANONICAL_HOST = process.env.CANONICAL_HOST || 'berrybabes.me';
 const ROOT_DIR = __dirname;
-const IMAGES_DIR = path.join(ROOT_DIR, 'images');
+const PUBLIC_DIR = path.join(ROOT_DIR, 'public');
+const IMAGES_DIR = path.join(PUBLIC_DIR, 'images');
 const ORDERS_PATH = path.join(ROOT_DIR, 'data', 'orders.json');
 const SUBSCRIBERS_PATH = path.join(ROOT_DIR, 'data', 'subscribers.json');
+const CUSTOMER_REVIEWS_PATH = path.join(ROOT_DIR, 'data', 'customer-reviews.json');
 
 const smtpConfigured =
   Boolean(process.env.SMTP_HOST) &&
@@ -31,6 +34,49 @@ const mailTransporter = smtpConfigured
     })
   : null;
 
+app.set('trust proxy', true);
+
+// Allow API access from custom domain, Railway domain, and temporary preview origins.
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+
+  return next();
+});
+
+// Keep one public domain for SEO, SSL consistency, and brand trust.
+app.use((req, res, next) => {
+  if (!CANONICAL_HOST) {
+    return next();
+  }
+
+  if (req.path.startsWith('/api/')) {
+    return next();
+  }
+
+  const requestHost = (req.headers.host || '').split(':')[0].toLowerCase();
+  const canonical = CANONICAL_HOST.toLowerCase();
+
+  if (!requestHost || requestHost === canonical) {
+    return next();
+  }
+
+  if (requestHost === `www.${canonical}`) {
+    return res.redirect(308, `https://${canonical}${req.originalUrl}`);
+  }
+
+  if (requestHost.endsWith('.railway.app')) {
+    return res.redirect(308, `https://${canonical}${req.originalUrl}`);
+  }
+
+  return next();
+});
+
 function ensureOrdersFile() {
   const dir = path.dirname(ORDERS_PATH);
   if (!fs.existsSync(dir)) {
@@ -48,6 +94,16 @@ function ensureSubscribersFile() {
   }
   if (!fs.existsSync(SUBSCRIBERS_PATH)) {
     fs.writeFileSync(SUBSCRIBERS_PATH, '[]', 'utf8');
+  }
+}
+
+function ensureCustomerReviewsFile() {
+  const dir = path.dirname(CUSTOMER_REVIEWS_PATH);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  if (!fs.existsSync(CUSTOMER_REVIEWS_PATH)) {
+    fs.writeFileSync(CUSTOMER_REVIEWS_PATH, '[]', 'utf8');
   }
 }
 
@@ -90,12 +146,32 @@ async function sendEmail({ to, subject, html }) {
   return { sent: true };
 }
 
-app.use(express.json({ limit: '1mb' }));
+function readCustomerReviews() {
+  ensureCustomerReviewsFile();
+  const raw = fs.readFileSync(CUSTOMER_REVIEWS_PATH, 'utf8');
+  const parsed = JSON.parse(raw || '[]');
+  return Array.isArray(parsed) ? parsed : [];
+}
+
+function writeCustomerReviews(reviews) {
+  ensureCustomerReviewsFile();
+  fs.writeFileSync(CUSTOMER_REVIEWS_PATH, JSON.stringify(reviews, null, 2), 'utf8');
+}
+
+function isValidImageDataUrl(value) {
+  if (!value) return true;
+  if (typeof value !== 'string') return false;
+  const hasPrefix = /^data:image\/(png|jpe?g|webp);base64,/i.test(value);
+  if (!hasPrefix) return false;
+  return value.length <= 950000;
+}
+
+app.use(express.json({ limit: '5mb' }));
 app.use('/images', express.static(IMAGES_DIR));
-app.use(express.static(ROOT_DIR));
+app.use(express.static(PUBLIC_DIR));
 
 app.get('/', (_req, res) => {
-  res.sendFile(path.join(ROOT_DIR, 'index.html'));
+  res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
 });
 
 app.post('/api/subscribe', async (req, res) => {
@@ -137,7 +213,7 @@ app.post('/api/subscribe', async (req, res) => {
 app.post('/api/orders', async (req, res) => {
   try {
     const payload = req.body || {};
-    const required = ['fullName', 'phone', 'address', 'city', 'postalCode', 'items'];
+    const required = ['fullName', 'phone', 'address', 'state', 'city', 'postalCode', 'items'];
     const missing = required.filter(key => !payload[key] || (Array.isArray(payload[key]) && !payload[key].length));
 
     if (missing.length) {
@@ -151,6 +227,7 @@ app.post('/api/orders', async (req, res) => {
       phone: String(payload.phone).trim(),
       email: String(payload.email || '').trim(),
       address: String(payload.address).trim(),
+      state: String(payload.state).trim(),
       city: String(payload.city).trim(),
       postalCode: String(payload.postalCode).trim(),
       notes: String(payload.notes || '').trim(),
@@ -176,7 +253,7 @@ app.post('/api/orders', async (req, res) => {
           <p>Hi ${order.fullName}, thank you for your order.</p>
           <p><strong>Order ID:</strong> ${order.id}</p>
           <p><strong>Total:</strong> Pkr ${Number(order.total).toFixed(0)}</p>
-          <p><strong>Delivery Address:</strong> ${order.address}, ${order.city}, ${order.postalCode}</p>
+          <p><strong>Delivery Address:</strong> ${order.address}, ${order.city}, ${order.state}, ${order.postalCode}</p>
           <h4>Items:</h4>
           <ul>${orderItemsHtml}</ul>
         `
@@ -227,9 +304,109 @@ app.delete('/api/subscribers', (_req, res) => {
   }
 });
 
+app.get('/api/reviews', (req, res) => {
+  try {
+    const productId = String((req.query || {}).productId || '').trim();
+    const includeAll = String((req.query || {}).includeAll || '').trim() === '1';
+    const reviews = readCustomerReviews();
+    const visibleReviews = includeAll
+      ? reviews
+      : reviews.filter(item => item.approved !== false);
+
+    const filtered = productId
+      ? visibleReviews.filter(item => item.productId === productId)
+      : visibleReviews;
+
+    return res.json({ reviews: filtered.slice(0, 60) });
+  } catch (error) {
+    return res.status(500).json({ error: 'Unable to read reviews' });
+  }
+});
+
+app.post('/api/reviews', (req, res) => {
+  try {
+    const payload = req.body || {};
+    const productId = String(payload.productId || '').trim();
+    const name = String(payload.name || '').trim();
+    const reviewText = String(payload.review || '').trim();
+    const rating = Number(payload.rating);
+    const imageData = payload.imageData || '';
+
+    if (!productId || !name || !reviewText || !Number.isFinite(rating)) {
+      return res.status(400).json({ error: 'productId, name, rating, and review are required' });
+    }
+
+    if (name.length < 2 || name.length > 50) {
+      return res.status(400).json({ error: 'Name must be between 2 and 50 characters' });
+    }
+
+    if (reviewText.length < 10 || reviewText.length > 500) {
+      return res.status(400).json({ error: 'Review must be between 10 and 500 characters' });
+    }
+
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({ error: 'Rating must be between 1 and 5' });
+    }
+
+    if (!isValidImageDataUrl(imageData)) {
+      return res.status(400).json({ error: 'Image must be PNG, JPG, or WebP and under 700KB' });
+    }
+
+    const reviews = readCustomerReviews();
+    const entry = {
+      id: `REV-${Date.now()}`,
+      productId,
+      name,
+      rating,
+      review: reviewText,
+      imageData: imageData || '',
+      approved: false,
+      createdAt: new Date().toISOString()
+    };
+
+    reviews.unshift(entry);
+    writeCustomerReviews(reviews.slice(0, 300));
+
+    return res.status(201).json({ success: true, review: entry });
+  } catch (error) {
+    return res.status(500).json({ error: 'Unable to submit review' });
+  }
+});
+
+app.patch('/api/reviews/:id', (req, res) => {
+  try {
+    const reviewId = String((req.params || {}).id || '').trim();
+    const approved = (req.body || {}).approved;
+
+    if (!reviewId) {
+      return res.status(400).json({ error: 'Review id is required' });
+    }
+
+    if (typeof approved !== 'boolean') {
+      return res.status(400).json({ error: 'approved must be true or false' });
+    }
+
+    const reviews = readCustomerReviews();
+    const target = reviews.find(item => item.id === reviewId);
+
+    if (!target) {
+      return res.status(404).json({ error: 'Review not found' });
+    }
+
+    target.approved = approved;
+    target.moderatedAt = new Date().toISOString();
+    writeCustomerReviews(reviews);
+
+    return res.json({ success: true, review: target });
+  } catch (error) {
+    return res.status(500).json({ error: 'Unable to update review status' });
+  }
+});
+
 app.listen(PORT, HOST, () => {
   ensureOrdersFile();
   ensureSubscribersFile();
+  ensureCustomerReviewsFile();
   if (!smtpConfigured) {
     console.log('Email service disabled: set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM in .env');
   }
