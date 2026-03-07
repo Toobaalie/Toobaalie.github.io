@@ -123,9 +123,20 @@ function subscriberCard(subscriber) {
 function reviewCard(review) {
   const statusClass = review.approved === false ? '' : 'admin-review-status--approved';
   const statusText = review.approved === false ? 'Pending' : 'Approved';
-  const imageHtml = review.imageData
-    ? `<div class="admin-review-image"><img src="${review.imageData}" alt="Review by ${escapeHtml(review.name)}" /></div>`
-    : '';
+  const images = Array.isArray(review.imageDataList) && review.imageDataList.length
+    ? review.imageDataList
+    : (review.imageData ? [review.imageData] : []);
+
+  let imageHtml = '';
+  if (images.length === 1) {
+    imageHtml = `<div class="admin-review-image"><img src="${images[0]}" alt="Review by ${escapeHtml(review.name)}" /></div>`;
+  } else if (images.length > 1) {
+    imageHtml = `
+      <div class="admin-review-images">
+        ${images.map((src, index) => `<div class="admin-review-image"><img src="${src}" alt="Review by ${escapeHtml(review.name)} photo ${index + 1}" /></div>`).join('')}
+      </div>
+    `;
+  }
 
   return `
     <article class="admin-order-card" data-review-id="${escapeHtml(review.id)}">

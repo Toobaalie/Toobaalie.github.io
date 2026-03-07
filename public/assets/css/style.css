@@ -864,6 +864,19 @@ h1, h2, h3, h4, h5 { font-family: var(--font-serif); line-height: 1.2; }
   object-fit: cover;
 }
 
+.customer-gallery-card__media-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.2rem;
+  background: var(--light-gray);
+}
+
+.customer-gallery-card__media-grid img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
 .customer-gallery-card__body {
   padding: 0.85rem;
 }
@@ -1534,6 +1547,19 @@ h1, h2, h3, h4, h5 { font-family: var(--font-serif); line-height: 1.2; }
   width: 100%;
   height: auto;
   object-fit: cover;
+}
+
+.admin-review-images {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin: 0.7rem 0;
+  max-width: 460px;
+}
+
+.admin-review-images .admin-review-image {
+  margin: 0;
+  max-width: none;
 }
 
 .admin-review-actions {

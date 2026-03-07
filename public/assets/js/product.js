@@ -349,13 +349,24 @@ function renderCustomerGallery(reviews) {
 
   gallery.innerHTML = reviews
     .map(item => {
-      const image = item.imageData
-        ? `<div class="customer-gallery-card__media"><img src="${item.imageData}" alt="${item.name} review photo" /></div>`
-        : '';
+      const images = Array.isArray(item.imageDataList) && item.imageDataList.length
+        ? item.imageDataList
+        : (item.imageData ? [item.imageData] : []);
+
+      let mediaHtml = '';
+      if (images.length === 1) {
+        mediaHtml = `<div class="customer-gallery-card__media"><img src="${images[0]}" alt="${item.name} review photo" /></div>`;
+      } else if (images.length > 1) {
+        mediaHtml = `
+          <div class="customer-gallery-card__media-grid">
+            ${images.map((src, index) => `<img src="${src}" alt="${item.name} review photo ${index + 1}" />`).join('')}
+          </div>
+        `;
+      }
 
       return `
         <article class="customer-gallery-card">
-          ${image}
+          ${mediaHtml}
           <div class="customer-gallery-card__body">
             <div class="customer-gallery-card__top">
               <h3>${item.name}</h3>
@@ -402,30 +413,24 @@ function initCustomerReviewForm(productId) {
     const rating = Number(document.getElementById('customerRating')?.value || 0);
     const review = document.getElementById('customerReviewText')?.value.trim() || '';
     const photoInput = document.getElementById('customerPhoto');
-    const file = photoInput && photoInput.files ? photoInput.files[0] : null;
+    const files = photoInput && photoInput.files ? Array.from(photoInput.files) : [];
 
     if (!name || !rating || review.length < 10) {
       showToast('Please complete name, rating, and a review of at least 10 characters');
       return;
     }
 
-    let imageData = '';
-    if (file) {
-      const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
-      if (!allowedTypes.includes(file.type)) {
-        showToast('Only PNG, JPG, or WebP images are allowed');
-        return;
-      }
+    let imageDataList = [];
+    if (files.length > 12) {
+      showToast('Please select up to 12 images');
+      return;
+    }
 
-      if (file.size > 700 * 1024) {
-        showToast('Image must be under 700KB');
-        return;
-      }
-
+    if (files.length) {
       try {
-        imageData = await readImageFileAsDataUrl(file);
+        imageDataList = await Promise.all(files.map(readImageFileAsDataUrl));
       } catch {
-        showToast('Could not read the selected image');
+        showToast('Could not read one or more selected images');
         return;
       }
     }
@@ -442,7 +447,8 @@ function initCustomerReviewForm(productId) {
           name,
           rating,
           review,
-          imageData
+          imageData: imageDataList[0] || '',
+          imageDataList
         })
       });
 

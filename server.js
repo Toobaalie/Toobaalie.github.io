@@ -372,12 +372,10 @@ function writeCustomerReviews(reviews) {
 function isValidImageDataUrl(value) {
   if (!value) return true;
   if (typeof value !== 'string') return false;
-  const hasPrefix = /^data:image\/(png|jpe?g|webp);base64,/i.test(value);
-  if (!hasPrefix) return false;
-  return value.length <= 950000;
+  return /^data:image\/[a-z0-9.+-]+;base64,/i.test(value);
 }
 
-app.use(express.json({ limit: '5mb' }));
+app.use(express.json({ limit: '30mb' }));
 app.use('/images', express.static(IMAGES_DIR));
 
 app.get('/assets/js/products-data.js', (_req, res) => {
@@ -737,6 +735,12 @@ app.post('/api/reviews', reviewLimiter, (req, res) => {
     const reviewText = String(payload.review || '').trim();
     const rating = Number(payload.rating);
     const imageData = payload.imageData || '';
+    const imageDataListRaw = Array.isArray(payload.imageDataList)
+      ? payload.imageDataList
+      : (imageData ? [imageData] : []);
+    const imageDataList = imageDataListRaw
+      .map(item => String(item || '').trim())
+      .filter(Boolean);
 
     if (!productId || !name || !reviewText || !Number.isFinite(rating)) {
       return res.status(400).json({ error: 'productId, name, rating, and review are required' });
@@ -754,8 +758,13 @@ app.post('/api/reviews', reviewLimiter, (req, res) => {
       return res.status(400).json({ error: 'Rating must be between 1 and 5' });
     }
 
-    if (!isValidImageDataUrl(imageData)) {
-      return res.status(400).json({ error: 'Image must be PNG, JPG, or WebP and under 700KB' });
+    if (imageDataList.length > 12) {
+      return res.status(400).json({ error: 'You can upload up to 12 images per review' });
+    }
+
+    const hasInvalidImage = imageDataList.some(item => !isValidImageDataUrl(item));
+    if (hasInvalidImage) {
+      return res.status(400).json({ error: 'Only valid image files are allowed' });
     }
 
     const reviews = readCustomerReviews();
@@ -765,7 +774,8 @@ app.post('/api/reviews', reviewLimiter, (req, res) => {
       name,
       rating,
       review: reviewText,
-      imageData: imageData || '',
+      imageData: imageDataList[0] || '',
+      imageDataList,
       approved: false,
       createdAt: new Date().toISOString()
     };
