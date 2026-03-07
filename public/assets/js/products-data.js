@@ -77,7 +77,7 @@ window.BerryBabesProducts = {
   'silk-bundle': {
     name: 'Black Silk Scrunchie',
     category: 'Silk',
-    price: 199,
+    price: 149,
     image: 'images/black plain silk.jpeg',
     description: 'Classic black silk scrunchie with a sleek look and comfortable grip.',
     colors: ['Black'],
