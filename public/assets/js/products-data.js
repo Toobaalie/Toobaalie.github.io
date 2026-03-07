@@ -61,8 +61,13 @@ window.BerryBabesProducts = {
     description: 'Glossy satin-silk feel with gentle hold and a polished look.',
     colors: ['Skin Satin'],
     colorImages: {
-      'Skin Satin': 'images/skin satin mockup.jpg',
+      'Skin Satin': 'images/silk 4.jpeg',
     },
+    galleryImages: [
+      'images/silk 4.jpeg',
+      'images/skin mock2.jpeg',
+      'images/skin satin mockup.jpg'
+    ],
     reviews: [
       { name: 'Noor', rating: 5, text: 'The skin satin finish looks super clean and classy.' },
       { name: 'Anum', rating: 4, text: 'Good to see both style views in one place.' },
