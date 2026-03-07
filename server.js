@@ -13,10 +13,13 @@ const CANONICAL_HOST = process.env.CANONICAL_HOST || 'berrybabes.me';
 const ROOT_DIR = __dirname;
 const PUBLIC_DIR = path.join(ROOT_DIR, 'public');
 const IMAGES_DIR = path.join(PUBLIC_DIR, 'images');
-const ORDERS_PATH = path.join(ROOT_DIR, 'data', 'orders.json');
-const SUBSCRIBERS_PATH = path.join(ROOT_DIR, 'data', 'subscribers.json');
-const CUSTOMER_REVIEWS_PATH = path.join(ROOT_DIR, 'data', 'customer-reviews.json');
-const PRODUCTS_PATH = path.join(ROOT_DIR, 'data', 'products.json');
+const DATA_DIR = process.env.DATA_DIR
+  ? path.resolve(process.env.DATA_DIR)
+  : path.join(ROOT_DIR, 'data');
+const ORDERS_PATH = path.join(DATA_DIR, 'orders.json');
+const SUBSCRIBERS_PATH = path.join(DATA_DIR, 'subscribers.json');
+const CUSTOMER_REVIEWS_PATH = path.join(DATA_DIR, 'customer-reviews.json');
+const PRODUCTS_PATH = path.join(DATA_DIR, 'products.json');
 const SMTP_FROM = process.env.SMTP_FROM || process.env.SMTP_USER || '';
 const SMTP_FROM_NAME = process.env.SMTP_FROM_NAME || 'BerryBabes Orders';
 const EMAIL_NOTIFICATIONS_ENABLED = false;
@@ -825,7 +828,8 @@ app.listen(PORT, HOST, () => {
   ensureSubscribersFile();
   ensureCustomerReviewsFile();
   ensureProductsFile();
-  console.log('Order storage mode: local JSON file (data/orders.json).');
+  console.log(`Data directory: ${DATA_DIR}`);
+  console.log(`Order storage mode: local JSON file (${ORDERS_PATH}).`);
   if (!smtpConfigured) {
     console.log('Email service disabled: set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM in .env');
   }
