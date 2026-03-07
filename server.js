@@ -2,6 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const nodemailer = require('nodemailer');
+const { MongoClient } = require('mongodb');
 require('dotenv').config();
 
 const app = express();
@@ -14,8 +15,38 @@ const IMAGES_DIR = path.join(PUBLIC_DIR, 'images');
 const ORDERS_PATH = path.join(ROOT_DIR, 'data', 'orders.json');
 const SUBSCRIBERS_PATH = path.join(ROOT_DIR, 'data', 'subscribers.json');
 const CUSTOMER_REVIEWS_PATH = path.join(ROOT_DIR, 'data', 'customer-reviews.json');
+const MONGODB_URI = process.env.MONGODB_URI || '';
+const MONGODB_DB = process.env.MONGODB_DB || 'berrybabes';
 const SMTP_FROM = process.env.SMTP_FROM || process.env.SMTP_USER || '';
 const SMTP_FROM_NAME = process.env.SMTP_FROM_NAME || 'BerryBabes Orders';
+
+let mongoClient = null;
+let mongoDb = null;
+
+async function ensureMongoConnection() {
+  if (!MONGODB_URI) return false;
+  if (mongoDb) return true;
+
+  try {
+    if (!mongoClient) {
+      mongoClient = new MongoClient(MONGODB_URI, {
+        serverSelectionTimeoutMS: 5000
+      });
+    }
+
+    await mongoClient.connect();
+    mongoDb = mongoClient.db(MONGODB_DB);
+    return true;
+  } catch (error) {
+    console.error('MongoDB connection failed:', error.message || error);
+    mongoDb = null;
+    return false;
+  }
+}
+
+function getOrdersCollection() {
+  return mongoDb ? mongoDb.collection('orders') : null;
+}
 
 function inferSmtpDefaults(emailAddress) {
   const domain = String(emailAddress || '').split('@')[1]?.toLowerCase() || '';
@@ -163,6 +194,48 @@ function writeOrders(orders) {
   fs.writeFileSync(ORDERS_PATH, JSON.stringify(orders, null, 2), 'utf8');
 }
 
+async function readOrdersStorage() {
+  if (await ensureMongoConnection()) {
+    const collection = getOrdersCollection();
+    if (collection) {
+      const rows = await collection
+        .find({}, { projection: { _id: 0 } })
+        .sort({ createdAt: -1 })
+        .limit(1000)
+        .toArray();
+      return Array.isArray(rows) ? rows : [];
+    }
+  }
+
+  return readOrders();
+}
+
+async function saveOrderStorage(order) {
+  if (await ensureMongoConnection()) {
+    const collection = getOrdersCollection();
+    if (collection) {
+      await collection.insertOne(order);
+      return;
+    }
+  }
+
+  const orders = readOrders();
+  orders.unshift(order);
+  writeOrders(orders);
+}
+
+async function clearOrdersStorage() {
+  if (await ensureMongoConnection()) {
+    const collection = getOrdersCollection();
+    if (collection) {
+      await collection.deleteMany({});
+      return;
+    }
+  }
+
+  writeOrders([]);
+}
+
 function readSubscribers() {
   ensureSubscribersFile();
   const raw = fs.readFileSync(SUBSCRIBERS_PATH, 'utf8');
@@ -264,7 +337,6 @@ app.post('/api/orders', async (req, res) => {
       return res.status(400).json({ error: `Missing fields: ${missing.join(', ')}` });
     }
 
-    const orders = readOrders();
     const order = {
       id: `ORD-${Date.now()}`,
       fullName: String(payload.fullName).trim(),
@@ -280,8 +352,7 @@ app.post('/api/orders', async (req, res) => {
       createdAt: new Date().toISOString()
     };
 
-    orders.unshift(order);
-    writeOrders(orders);
+    await saveOrderStorage(order);
 
     let emailSent = false;
     let emailStatus = 'not_requested';
@@ -319,18 +390,18 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
-app.get('/api/orders', (_req, res) => {
+app.get('/api/orders', async (_req, res) => {
   try {
-    const orders = readOrders();
+    const orders = await readOrdersStorage();
     return res.json({ orders });
   } catch (error) {
     return res.status(500).json({ error: 'Unable to read orders' });
   }
 });
 
-app.delete('/api/orders', (_req, res) => {
+app.delete('/api/orders', async (_req, res) => {
   try {
-    writeOrders([]);
+    await clearOrdersStorage();
     return res.json({ success: true });
   } catch (error) {
     return res.status(500).json({ error: 'Unable to clear orders' });
@@ -458,6 +529,17 @@ app.listen(PORT, HOST, () => {
   ensureOrdersFile();
   ensureSubscribersFile();
   ensureCustomerReviewsFile();
+  if (MONGODB_URI) {
+    ensureMongoConnection().then(connected => {
+      if (connected) {
+        console.log(`MongoDB connected (db: ${MONGODB_DB})`);
+      } else {
+        console.log('MongoDB unavailable; using local JSON storage for orders.');
+      }
+    });
+  } else {
+    console.log('MongoDB not configured; using local JSON storage for orders.');
+  }
   if (!smtpConfigured) {
     console.log('Email service disabled: set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM in .env');
   }
