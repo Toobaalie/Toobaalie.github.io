@@ -15,8 +15,8 @@ const IMAGES_DIR = path.join(PUBLIC_DIR, 'images');
 const ORDERS_PATH = path.join(ROOT_DIR, 'data', 'orders.json');
 const SUBSCRIBERS_PATH = path.join(ROOT_DIR, 'data', 'subscribers.json');
 const CUSTOMER_REVIEWS_PATH = path.join(ROOT_DIR, 'data', 'customer-reviews.json');
-const MONGODB_URI = process.env.MONGODB_URI || '';
-const MONGODB_DB = process.env.MONGODB_DB || 'berrybabes';
+const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGODB_URL || '';
+const MONGODB_DB = process.env.MONGODB_DB || process.env.MONGO_DB_DB || 'berrybabes';
 const SMTP_FROM = process.env.SMTP_FROM || process.env.SMTP_USER || '';
 const SMTP_FROM_NAME = process.env.SMTP_FROM_NAME || 'BerryBabes Orders';
 
@@ -82,7 +82,7 @@ function inferSmtpDefaults(emailAddress) {
 
 const smtpUser = process.env.SMTP_USER || '';
 const smtpPass = process.env.SMTP_PASS || '';
-const explicitSmtpHost = process.env.SMTP_HOST || '';
+const explicitSmtpHost = process.env.SMTP_HOST || process.env.SMTP__HOST || '';
 const explicitSmtpPort = Number(process.env.SMTP_PORT || 0);
 const inferredSmtp = inferSmtpDefaults(smtpUser);
 const smtpHost = explicitSmtpHost || inferredSmtp?.host || '';
