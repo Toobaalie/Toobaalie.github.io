@@ -451,6 +451,8 @@ async function moderateReview(reviewId, approved) {
   if (!response.ok) {
     throw new Error('Unable to update review status');
   }
+
+  return response.json().catch(() => ({}));
 }
 
 async function clearCollection(endpoint, label) {
@@ -602,13 +604,39 @@ function setupActions(getState, refreshData) {
       const reviewId = card.dataset.reviewId;
       const action = button.dataset.reviewAction;
       const approved = action === 'approve';
+      const state = getState();
+      const reviewIndex = state.reviews.findIndex(item => item.id === reviewId);
+      if (reviewIndex < 0) {
+        setStatus('Review not found in current list.', true);
+        return;
+      }
+
+      const targetReview = state.reviews[reviewIndex];
+      const previousApproved = targetReview.approved;
+
+      button.disabled = true;
+      const previousLabel = button.textContent;
+      button.textContent = 'Updating...';
+
+      // Optimistic UI update for instant feedback.
+      targetReview.approved = approved;
+      targetReview.moderatedAt = new Date().toISOString();
+      renderReviews(state.reviews);
 
       try {
-        await moderateReview(reviewId, approved);
-        await refreshData();
+        const payload = await moderateReview(reviewId, approved);
+        if (payload && payload.review) {
+          state.reviews[reviewIndex] = payload.review;
+        }
+        renderReviews(state.reviews);
         setStatus(approved ? 'Review approved.' : 'Review hidden from storefront.');
       } catch {
+        targetReview.approved = previousApproved;
+        renderReviews(state.reviews);
         setStatus('Unable to update review status.', true);
+      } finally {
+        button.disabled = false;
+        button.textContent = previousLabel;
       }
     });
   }
