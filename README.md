@@ -58,6 +58,7 @@ Create `.env` (or set these in Railway variables):
 PORT=3000
 HOST=0.0.0.0
 CANONICAL_HOST=berrybabes.me
+TRUST_PROXY=1
 CORS_ALLOWED_ORIGINS=https://berrybabes.me,https://www.berrybabes.me
 ADMIN_API_KEY=change-this-to-a-long-random-secret
 

@@ -22,6 +22,7 @@ const SMTP_FROM_NAME = process.env.SMTP_FROM_NAME || 'BerryBabes Orders';
 const EMAIL_NOTIFICATIONS_ENABLED = false;
 const ADMIN_API_KEY = String(process.env.ADMIN_API_KEY || '').trim();
 const CORS_ALLOWED_ORIGINS = String(process.env.CORS_ALLOWED_ORIGINS || '').trim();
+const TRUST_PROXY = process.env.TRUST_PROXY ? process.env.TRUST_PROXY : '1';
 
 function inferSmtpDefaults(emailAddress) {
   const domain = String(emailAddress || '').split('@')[1]?.toLowerCase() || '';
@@ -124,7 +125,7 @@ const reviewLimiter = rateLimit({
   message: { error: 'Too many review attempts. Please try again later.' }
 });
 
-app.set('trust proxy', true);
+app.set('trust proxy', TRUST_PROXY === 'false' ? false : TRUST_PROXY);
 
 function isLocalRequestHost(hostname) {
   const host = String(hostname || '').toLowerCase();
