@@ -55,6 +55,76 @@ function getImageByColor(product, color) {
   return product.image;
 }
 
+function setMetaContent(selector, content) {
+  const element = document.querySelector(selector);
+  if (!element || !content) return;
+  element.setAttribute('content', content);
+}
+
+function setProductSeoMeta(product, productId) {
+  const pageTitle = `${product.name} Scrunchie in Pakistan | BerryBabes.me`;
+  const pageDescription = `${product.description} Shop ${product.name} scrunchie online in Pakistan at BerryBabes.me.`;
+  const canonicalUrl = `https://berrybabes.me/product.html?id=${encodeURIComponent(productId)}`;
+  const imageUrl = `https://berrybabes.me/${String(product.image || '').replace(/^\//, '')}`;
+
+  document.title = pageTitle;
+  setMetaContent('meta[name="description"]', pageDescription);
+  setMetaContent('meta[property="og:title"]', pageTitle);
+  setMetaContent('meta[property="og:description"]', pageDescription);
+  setMetaContent('meta[property="og:url"]', canonicalUrl);
+  setMetaContent('meta[property="og:image"]', imageUrl);
+  setMetaContent('meta[name="twitter:title"]', pageTitle);
+  setMetaContent('meta[name="twitter:description"]', pageDescription);
+  setMetaContent('meta[name="twitter:image"]', imageUrl);
+
+  const canonicalLink = document.querySelector('link[rel="canonical"]');
+  if (canonicalLink) {
+    canonicalLink.setAttribute('href', canonicalUrl);
+  }
+
+  const aggregateRating = Array.isArray(product.reviews) && product.reviews.length
+    ? (product.reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / product.reviews.length).toFixed(1)
+    : null;
+
+  const productSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.description,
+    image: [imageUrl],
+    sku: productId,
+    brand: {
+      '@type': 'Brand',
+      name: 'BerryBabes.me'
+    },
+    offers: {
+      '@type': 'Offer',
+      url: canonicalUrl,
+      priceCurrency: 'PKR',
+      price: String(product.price),
+      availability: 'https://schema.org/InStock'
+    }
+  };
+
+  if (aggregateRating) {
+    productSchema.aggregateRating = {
+      '@type': 'AggregateRating',
+      ratingValue: aggregateRating,
+      reviewCount: String(product.reviews.length)
+    };
+  }
+
+  let schemaScript = document.getElementById('productJsonLd');
+  if (!schemaScript) {
+    schemaScript = document.createElement('script');
+    schemaScript.type = 'application/ld+json';
+    schemaScript.id = 'productJsonLd';
+    document.head.appendChild(schemaScript);
+  }
+
+  schemaScript.textContent = JSON.stringify(productSchema);
+}
+
 function renderProduct(product) {
   const detail = document.getElementById('productDetail');
   if (!detail) return;
@@ -398,6 +468,7 @@ function initCustomerReviewForm(productId) {
   window.currentProductId = id && products[id] ? id : 'silk-scrunchie';
   localStorage.setItem('berrybabes_last_viewed', window.currentProductId);
   const product = products[window.currentProductId];
+  setProductSeoMeta(product, window.currentProductId);
   updateCartBadge();
   updateWishlistBadge();
   renderProduct(product);
