@@ -240,6 +240,17 @@ async function clearOrdersStorage() {
   writeOrders([]);
 }
 
+async function getOrdersStorageBackend() {
+  if (await ensureMongoConnection()) {
+    const collection = getOrdersCollection();
+    if (collection) {
+      return 'mongodb';
+    }
+  }
+
+  return 'json-fallback';
+}
+
 function readSubscribers() {
   ensureSubscribersFile();
   const raw = fs.readFileSync(SUBSCRIBERS_PATH, 'utf8');
@@ -374,6 +385,7 @@ app.post('/api/orders', async (req, res) => {
     };
 
     await saveOrderStorage(order);
+    const storageBackend = await getOrdersStorageBackend();
 
     let emailSent = false;
     let emailStatus = 'disabled';
@@ -401,7 +413,13 @@ app.post('/api/orders', async (req, res) => {
       emailStatus = emailResult.sent ? 'sent' : (emailResult.reason || 'send_failed');
     }
 
-    return res.status(201).json({ success: true, orderId: order.id, emailSent, emailStatus });
+    return res.status(201).json({
+      success: true,
+      orderId: order.id,
+      emailSent,
+      emailStatus,
+      storageBackend
+    });
   } catch (error) {
     console.error('Order API failed:', error.message || error);
     return res.status(500).json({ error: 'Unable to save order. Please try again in a moment.' });
@@ -411,7 +429,8 @@ app.post('/api/orders', async (req, res) => {
 app.get('/api/orders', async (_req, res) => {
   try {
     const orders = await readOrdersStorage();
-    return res.json({ orders });
+    const storageBackend = await getOrdersStorageBackend();
+    return res.json({ orders, storageBackend });
   } catch (error) {
     return res.status(500).json({ error: 'Unable to read orders' });
   }
