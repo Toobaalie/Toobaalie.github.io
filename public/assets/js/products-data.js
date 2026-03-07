@@ -21,10 +21,11 @@ window.BerryBabesProducts = {
     price: 300,
     image: 'images/pearl black.jpeg',
     description: 'Luxe silk texture with elegant color options for day and night looks.',
-    colors: ['Pearl Black', 'Pearl Blue', 'Pearl Grey'],
+    colors: ['Pearl Black', 'Pearl Blue', 'Pearl Blue Luxe', 'Pearl Grey'],
     colorImages: {
       'Pearl Black': 'images/pearl black.jpeg',
       'Pearl Blue': 'images/pearl blue.jpeg',
+      'Pearl Blue Luxe': 'images/4b09add7d9792a75988407081e156d27.jpg',
       'Pearl Grey': 'images/pearl grey.jpeg'
     },
     reviews: [

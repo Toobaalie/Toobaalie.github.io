@@ -94,8 +94,13 @@ function renderProduct(product) {
         <div class="color-options" id="colorOptions">
           ${product.colors
             .map(
-              (color, index) =>
-                `<button class="color-option ${color === selectedColor ? 'active' : ''}" data-color="${color}">${color}</button>`
+              (color, index) => {
+                const colorImage = getImageByColor(product, color);
+                return `<button class="color-option ${color === selectedColor ? 'active' : ''}" data-color="${color}" aria-label="${color}">
+                  <img class="color-option__img" src="${colorImage}" alt="${color}" />
+                  <span class="color-option__label">${color}</span>
+                </button>`;
+              }
             )
             .join('')}
         </div>
