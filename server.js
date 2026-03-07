@@ -1,7 +1,10 @@
 const express = require('express');
 const fs = require('fs');
+const https = require('https');
+const crypto = require('crypto');
 const path = require('path');
 const nodemailer = require('nodemailer');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const app = express();
@@ -17,6 +20,14 @@ const CUSTOMER_REVIEWS_PATH = path.join(ROOT_DIR, 'data', 'customer-reviews.json
 const SMTP_FROM = process.env.SMTP_FROM || process.env.SMTP_USER || '';
 const SMTP_FROM_NAME = process.env.SMTP_FROM_NAME || 'BerryBabes Orders';
 const EMAIL_NOTIFICATIONS_ENABLED = false;
+const ADMIN_API_KEY = String(process.env.ADMIN_API_KEY || '').trim();
+const CORS_ALLOWED_ORIGINS = String(process.env.CORS_ALLOWED_ORIGINS || '').trim();
+const WHATSAPP_ALERT_PHONE = String(process.env.WHATSAPP_ALERT_PHONE || '').trim();
+const WHATSAPP_ALERT_APIKEY = String(process.env.WHATSAPP_ALERT_APIKEY || '').trim();
+const WHATSAPP_NOTIFICATIONS_ENABLED = Boolean(WHATSAPP_ALERT_PHONE && WHATSAPP_ALERT_APIKEY);
+const TELEGRAM_BOT_TOKEN = String(process.env.TELEGRAM_BOT_TOKEN || '').trim();
+const TELEGRAM_CHAT_ID = String(process.env.TELEGRAM_CHAT_ID || '').trim();
+const TELEGRAM_NOTIFICATIONS_ENABLED = Boolean(TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID);
 
 function inferSmtpDefaults(emailAddress) {
   const domain = String(emailAddress || '').split('@')[1]?.toLowerCase() || '';
@@ -82,16 +93,118 @@ const mailTransporter = smtpConfigured
     })
   : null;
 
+const defaultAllowedOrigins = [
+  `https://${CANONICAL_HOST}`,
+  `https://www.${CANONICAL_HOST}`,
+  'http://localhost:3000',
+  'http://127.0.0.1:3000'
+].filter(Boolean);
+
+const allowedOrigins = new Set(
+  (CORS_ALLOWED_ORIGINS
+    ? CORS_ALLOWED_ORIGINS.split(',').map(item => item.trim()).filter(Boolean)
+    : defaultAllowedOrigins)
+);
+
+const orderLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many order attempts. Please try again shortly.' }
+});
+
+const subscribeLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many subscribe attempts. Please try again later.' }
+});
+
+const reviewLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 12,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many review attempts. Please try again later.' }
+});
+
 app.set('trust proxy', true);
 
-// Allow API access from custom domain, Railway domain, and temporary preview origins.
+function isLocalRequestHost(hostname) {
+  const host = String(hostname || '').toLowerCase();
+  return (
+    host === 'localhost' ||
+    host === '127.0.0.1' ||
+    host === '0.0.0.0'
+  );
+}
+
+function isAdminAuthorized(req) {
+  if (!ADMIN_API_KEY) return false;
+
+  const providedKey = String(req.get('x-admin-key') || '').trim();
+  if (!providedKey) return false;
+
+  const expected = Buffer.from(ADMIN_API_KEY);
+  const received = Buffer.from(providedKey);
+  if (expected.length !== received.length) return false;
+
+  return crypto.timingSafeEqual(expected, received);
+}
+
+function requireAdminAuth(req, res, next) {
+  if (!ADMIN_API_KEY) {
+    return res.status(503).json({ error: 'Admin API key is not configured on server' });
+  }
+
+  if (!isAdminAuthorized(req)) {
+    return res.status(401).json({ error: 'Unauthorized admin request' });
+  }
+
+  return next();
+}
+
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  const requestHost = String((req.headers.host || '').split(':')[0] || '');
+  const protoHeader = String(req.headers['x-forwarded-proto'] || '').toLowerCase();
+  const usingHttps = req.secure || protoHeader.includes('https');
+
+  if (!usingHttps && !isLocalRequestHost(requestHost)) {
+    return res.redirect(308, `https://${requestHost}${req.originalUrl}`);
+  }
+
+  return next();
+});
+
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  return next();
+});
+
+app.use((req, res, next) => {
+  const origin = String(req.headers.origin || '').trim();
+  const isAllowed = !origin || allowedOrigins.has(origin);
+
+  if (origin && !isAllowed && req.path.startsWith('/api/')) {
+    return res.status(403).json({ error: 'Origin is not allowed' });
+  }
+
+  if (origin && isAllowed) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Vary', 'Origin');
+  }
+
   res.header('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  res.header('Access-Control-Allow-Headers', 'Content-Type,X-Admin-Key');
 
   if (req.method === 'OPTIONS') {
-    return res.sendStatus(204);
+    return isAllowed ? res.sendStatus(204) : res.sendStatus(403);
   }
 
   return next();
@@ -227,6 +340,137 @@ async function sendEmailWithTimeout(payload, timeoutMs = 6000) {
   }
 }
 
+function buildOrderAlertMessage(order) {
+  const itemLines = (order.items || [])
+    .slice(0, 8)
+    .map(item => `- ${item.name} (${item.color || 'N/A'}) x${item.quantity}`)
+    .join('\n');
+
+  return [
+    'New BerryBabes Order',
+    `Order ID: ${order.id}`,
+    `Name: ${order.fullName}`,
+    `Phone: ${order.phone}`,
+    `City: ${order.city || '-'}`,
+    `State: ${order.state || '-'}`,
+    `Address: ${order.address}`,
+    `Total: Pkr ${Number(order.total || 0).toFixed(0)}`,
+    itemLines ? `Items:\n${itemLines}` : 'Items: -',
+    `Placed: ${new Date(order.createdAt).toLocaleString('en-PK')}`
+  ].join('\n');
+}
+
+function sendWhatsappMessage(text) {
+  if (!WHATSAPP_NOTIFICATIONS_ENABLED) {
+    return Promise.resolve({ sent: false, reason: 'not_configured' });
+  }
+
+  return new Promise(resolve => {
+    const encodedText = encodeURIComponent(String(text || '').slice(0, 3500));
+    const encodedPhone = encodeURIComponent(WHATSAPP_ALERT_PHONE);
+    const encodedApiKey = encodeURIComponent(WHATSAPP_ALERT_APIKEY);
+    const url = `https://api.callmebot.com/whatsapp.php?phone=${encodedPhone}&text=${encodedText}&apikey=${encodedApiKey}`;
+
+    const request = https.get(url, response => {
+      let raw = '';
+      response.on('data', chunk => {
+        raw += chunk;
+      });
+      response.on('end', () => {
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          resolve({ sent: true });
+          return;
+        }
+
+        const reason = raw ? String(raw).slice(0, 160) : `http_${response.statusCode}`;
+        resolve({ sent: false, reason });
+      });
+    });
+
+    request.setTimeout(4500, () => {
+      request.destroy();
+      resolve({ sent: false, reason: 'timeout' });
+    });
+
+    request.on('error', () => {
+      resolve({ sent: false, reason: 'request_failed' });
+    });
+  });
+}
+
+function sendTelegramMessage(text) {
+  if (!TELEGRAM_NOTIFICATIONS_ENABLED) {
+    return Promise.resolve({ sent: false, reason: 'not_configured' });
+  }
+
+  return new Promise(resolve => {
+    const payload = JSON.stringify({
+      chat_id: TELEGRAM_CHAT_ID,
+      text: String(text || '').slice(0, 3900)
+    });
+
+    const request = https.request({
+      method: 'POST',
+      hostname: 'api.telegram.org',
+      path: `/bot${encodeURIComponent(TELEGRAM_BOT_TOKEN)}/sendMessage`,
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(payload)
+      },
+      timeout: 4500
+    }, response => {
+      let raw = '';
+      response.on('data', chunk => {
+        raw += chunk;
+      });
+      response.on('end', () => {
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          resolve({ sent: true });
+          return;
+        }
+
+        let reason = `http_${response.statusCode}`;
+        try {
+          const parsed = JSON.parse(raw || '{}');
+          reason = parsed.description || reason;
+        } catch {
+          // Keep fallback reason when parsing fails.
+        }
+        resolve({ sent: false, reason });
+      });
+    });
+
+    request.on('timeout', () => {
+      request.destroy();
+      resolve({ sent: false, reason: 'timeout' });
+    });
+
+    request.on('error', () => {
+      resolve({ sent: false, reason: 'request_failed' });
+    });
+
+    request.write(payload);
+    request.end();
+  });
+}
+
+async function notifyNewOrder(order) {
+  const message = buildOrderAlertMessage(order);
+
+  const [whatsapp, telegram] = await Promise.all([
+    sendWhatsappMessage(message),
+    TELEGRAM_NOTIFICATIONS_ENABLED
+      ? sendTelegramMessage(message)
+      : Promise.resolve({ sent: false, reason: 'not_configured' })
+  ]);
+
+  return {
+    sent: whatsapp.sent || telegram.sent,
+    whatsapp,
+    telegram
+  };
+}
+
 function readCustomerReviews() {
   ensureCustomerReviewsFile();
   const raw = fs.readFileSync(CUSTOMER_REVIEWS_PATH, 'utf8');
@@ -255,7 +499,7 @@ app.get('/', (_req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
 });
 
-app.post('/api/subscribe', async (req, res) => {
+app.post('/api/subscribe', subscribeLimiter, async (req, res) => {
   try {
     const email = String((req.body || {}).email || '').trim().toLowerCase();
 
@@ -293,7 +537,7 @@ app.post('/api/subscribe', async (req, res) => {
   }
 });
 
-app.post('/api/orders', async (req, res) => {
+app.post('/api/orders', orderLimiter, async (req, res) => {
   try {
     const payload = req.body || {};
     const normalizedItems = Array.isArray(payload.items)
@@ -363,6 +607,9 @@ app.post('/api/orders', async (req, res) => {
     await saveOrderStorage(order);
     const storageBackend = await getOrdersStorageBackend();
 
+    // Alerting should never block order creation.
+    const alertResult = await notifyNewOrder(order);
+
     let emailSent = false;
     let emailStatus = 'disabled';
     if (order.email && EMAIL_NOTIFICATIONS_ENABLED) {
@@ -394,6 +641,8 @@ app.post('/api/orders', async (req, res) => {
       orderId: order.id,
       emailSent,
       emailStatus,
+      whatsappAlert: alertResult.whatsapp ? alertResult.whatsapp.sent : false,
+      telegramAlert: alertResult.telegram ? alertResult.telegram.sent : false,
       storageBackend
     });
   } catch (error) {
@@ -402,7 +651,7 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
-app.get('/api/orders', async (_req, res) => {
+app.get('/api/orders', requireAdminAuth, async (_req, res) => {
   try {
     const orders = await readOrdersStorage();
     const storageBackend = await getOrdersStorageBackend();
@@ -412,7 +661,7 @@ app.get('/api/orders', async (_req, res) => {
   }
 });
 
-app.delete('/api/orders', async (_req, res) => {
+app.delete('/api/orders', requireAdminAuth, async (_req, res) => {
   try {
     await clearOrdersStorage();
     return res.json({ success: true });
@@ -421,7 +670,7 @@ app.delete('/api/orders', async (_req, res) => {
   }
 });
 
-app.get('/api/subscribers', (_req, res) => {
+app.get('/api/subscribers', requireAdminAuth, (_req, res) => {
   try {
     const subscribers = readSubscribers();
     return res.json({ subscribers });
@@ -430,7 +679,7 @@ app.get('/api/subscribers', (_req, res) => {
   }
 });
 
-app.delete('/api/subscribers', (_req, res) => {
+app.delete('/api/subscribers', requireAdminAuth, (_req, res) => {
   try {
     writeSubscribers([]);
     return res.json({ success: true });
@@ -443,6 +692,11 @@ app.get('/api/reviews', (req, res) => {
   try {
     const productId = String((req.query || {}).productId || '').trim();
     const includeAll = String((req.query || {}).includeAll || '').trim() === '1';
+
+    if (includeAll && !isAdminAuthorized(req)) {
+      return res.status(401).json({ error: 'Unauthorized admin request' });
+    }
+
     const reviews = readCustomerReviews();
     const visibleReviews = includeAll
       ? reviews
@@ -458,7 +712,7 @@ app.get('/api/reviews', (req, res) => {
   }
 });
 
-app.post('/api/reviews', (req, res) => {
+app.post('/api/reviews', reviewLimiter, (req, res) => {
   try {
     const payload = req.body || {};
     const productId = String(payload.productId || '').trim();
@@ -508,7 +762,7 @@ app.post('/api/reviews', (req, res) => {
   }
 });
 
-app.patch('/api/reviews/:id', (req, res) => {
+app.patch('/api/reviews/:id', requireAdminAuth, (req, res) => {
   try {
     const reviewId = String((req.params || {}).id || '').trim();
     const approved = (req.body || {}).approved;
@@ -545,6 +799,15 @@ app.listen(PORT, HOST, () => {
   console.log('Order storage mode: local JSON file (data/orders.json).');
   if (!smtpConfigured) {
     console.log('Email service disabled: set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM in .env');
+  }
+  if (!WHATSAPP_NOTIFICATIONS_ENABLED) {
+    console.log('WhatsApp alerts disabled: set WHATSAPP_ALERT_PHONE and WHATSAPP_ALERT_APIKEY in .env');
+  }
+  if (!TELEGRAM_NOTIFICATIONS_ENABLED) {
+    console.log('Telegram alerts disabled: set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in .env');
+  }
+  if (!ADMIN_API_KEY) {
+    console.log('Admin API is locked: set ADMIN_API_KEY in .env to access admin endpoints.');
   }
   console.log(`BerryBabes server running at http://localhost:${PORT}`);
   console.log(`LAN access enabled on http://${HOST}:${PORT}`);

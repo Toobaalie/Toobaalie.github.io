@@ -2,6 +2,67 @@ function money(value) {
   return `Pkr ${Number(value).toFixed(0)}`;
 }
 
+const ADMIN_KEY_STORAGE_KEY = 'berrybabes_admin_api_key';
+
+function getAdminApiKey() {
+  try {
+    return String(sessionStorage.getItem(ADMIN_KEY_STORAGE_KEY) || '').trim();
+  } catch {
+    return '';
+  }
+}
+
+function saveAdminApiKey(value) {
+  try {
+    sessionStorage.setItem(ADMIN_KEY_STORAGE_KEY, String(value || '').trim());
+  } catch {
+    // Ignore session storage failures and rely on in-memory prompt flow.
+  }
+}
+
+function clearAdminApiKey() {
+  try {
+    sessionStorage.removeItem(ADMIN_KEY_STORAGE_KEY);
+  } catch {
+    // Ignore session storage failures.
+  }
+}
+
+function promptAdminApiKey() {
+  const value = window.prompt('Enter Admin API Key');
+  const key = String(value || '').trim();
+  if (!key) return '';
+  saveAdminApiKey(key);
+  return key;
+}
+
+async function adminFetch(url, options = {}) {
+  let adminKey = getAdminApiKey();
+  if (!adminKey) {
+    adminKey = promptAdminApiKey();
+  }
+
+  if (!adminKey) {
+    throw new Error('Admin key is required');
+  }
+
+  const headers = {
+    ...(options.headers || {}),
+    'X-Admin-Key': adminKey
+  };
+
+  const response = await fetch(url, {
+    ...options,
+    headers
+  });
+
+  if (response.status === 401) {
+    clearAdminApiKey();
+  }
+
+  return response;
+}
+
 function escapeHtml(value) {
   return String(value || '')
     .replaceAll('&', '&amp;')
@@ -203,9 +264,9 @@ function subscribersToCsvRows(subscribers) {
 
 async function loadAdminData() {
   const [ordersResponse, subscribersResponse, reviewsResponse] = await Promise.all([
-    fetch('/api/orders'),
-    fetch('/api/subscribers'),
-    fetch('/api/reviews?includeAll=1')
+    adminFetch('/api/orders'),
+    adminFetch('/api/subscribers'),
+    adminFetch('/api/reviews?includeAll=1')
   ]);
 
   if (!ordersResponse.ok || !subscribersResponse.ok || !reviewsResponse.ok) {
@@ -226,7 +287,7 @@ async function loadAdminData() {
 }
 
 async function moderateReview(reviewId, approved) {
-  const response = await fetch(`/api/reviews/${encodeURIComponent(reviewId)}`, {
+  const response = await adminFetch(`/api/reviews/${encodeURIComponent(reviewId)}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ approved })
@@ -243,7 +304,7 @@ async function clearCollection(endpoint, label) {
     return false;
   }
 
-  const response = await fetch(endpoint, { method: 'DELETE' });
+  const response = await adminFetch(endpoint, { method: 'DELETE' });
   if (!response.ok) {
     throw new Error(`Unable to clear ${label}`);
   }
@@ -351,7 +412,7 @@ function setupActions(getState, refreshData) {
 
   setupActions(() => state, refreshData);
 
-  refreshData().catch(() => {
+  refreshData().catch(error => {
     const ordersContainer = document.getElementById('adminOrders');
     const subscribersContainer = document.getElementById('adminSubscribers');
     const reviewsContainer = document.getElementById('adminReviews');
@@ -383,6 +444,7 @@ function setupActions(getState, refreshData) {
       `;
     }
 
-    setStatus('Unable to load admin data.', true);
+    const message = (error && error.message) ? error.message : 'Unable to load admin data.';
+    setStatus(message.includes('Admin key') ? message : 'Unable to load admin data. Check admin key and server settings.', true);
   });
 })();
