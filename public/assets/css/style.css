@@ -1656,36 +1656,6 @@ h1, h2, h3, h4, h5 { font-family: var(--font-serif); line-height: 1.2; }
   box-shadow: 0 0 0 3px rgba(196,114,127,0.12);
 }
 
-/* ========== FAQ ========== */
-.faq {
-  background: #fff;
-}
-
-.faq__list {
-  max-width: 900px;
-  margin: 0 auto;
-  display: grid;
-  gap: 0.9rem;
-}
-
-.faq__item {
-  border: 1px solid var(--border);
-  border-radius: 0.9rem;
-  padding: 1rem 1.1rem;
-  background: #fff;
-}
-
-.faq__item h3 {
-  font-family: var(--font-sans);
-  font-size: 0.95rem;
-  margin-bottom: 0.35rem;
-}
-
-.faq__item p {
-  color: var(--warm-gray);
-  font-size: 0.84rem;
-}
-
 /* ========== CONTACT ========== */
 .contact { background: #fff; }
 .contact__inner {
