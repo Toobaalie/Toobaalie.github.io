@@ -112,7 +112,7 @@ function renderWishlist() {
               <img src="${item.image || 'images/1.jpeg'}" alt="${item.name}" />
             </a>
             <div class="product-card__actions">
-              <button class="add-cart-btn" onclick="addToCart('${item.name.replaceAll("'", "\\'")}', ${Number(item.price) || 150}, '${item.id}', 'Default', '${item.image || ''}')">
+              <button class="add-cart-btn" onclick="addToCart('${item.name.replaceAll("'", "\\'")}', ${Number(item.price) || 149}, '${item.id}', 'Default', '${item.image || ''}')">
                 <i class="fas fa-shopping-bag"></i> Add to Cart
               </button>
               <button class="wish-btn wish-remove-btn" data-wishlist-remove="${item.id}"><i class="fas fa-heart"></i></button>
@@ -423,7 +423,7 @@ function handleQuiz(e) {
           </a>
           ${badgeHtml}
           <div class="product-card__actions">
-            <button class="add-cart-btn" onclick="addToCart('${safeName}', ${Number(price) || 150}, '${id}', '${safeColor}', '${image}')">
+            <button class="add-cart-btn" onclick="addToCart('${safeName}', ${Number(price) || 149}, '${id}', '${safeColor}', '${image}')">
               <i class="fas fa-shopping-bag"></i> Add to Cart
             </button>
             <button class="wish-btn"><i class="far fa-heart"></i></button>
@@ -432,7 +432,7 @@ function handleQuiz(e) {
         <div class="product-card__info">
           <span class="product-card__cat">${displayCategory}</span>
           <h3 class="product-card__name"><a href="${url}" class="product-link">${title}</a></h3>
-          <p class="product-card__price">Pkr ${Number(price) || 150}</p>
+          <p class="product-card__price">Pkr ${Number(price) || 149}</p>
         </div>
       </div>
     `;

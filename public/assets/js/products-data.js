@@ -2,7 +2,7 @@ window.BerryBabesProducts = {
   'silk-scrunchie': {
     name: 'Golden Pearl Silk',
     category: 'Silk',
-    price: 150,
+    price: 199,
     image: 'images/golden pearl diff 2.jpeg',
     description: 'Premium silk scrunchie with a soft, smooth finish for everyday wear.',
     colors: ['Golden Pearl A', 'Golden Pearl B'],
@@ -18,7 +18,7 @@ window.BerryBabesProducts = {
   'pearl-collection': {
     name: 'Pearl Collection',
     category: 'Silk',
-    price: 299,
+    price: 149,
     image: 'images/pearl black.jpeg',
     description: 'Luxe silk texture with elegant color options for day and night looks.',
     colors: ['Pearl Black', 'Pearl Blue', 'Pearl Blue Luxe', 'Pearl Grey'],
@@ -56,7 +56,7 @@ window.BerryBabesProducts = {
   'satin-dream': {
     name: 'Skin Satin Set',
     category: 'Silk',
-    price: 150,
+    price: 149,
     image: 'images/silk 4.jpeg',
     description: 'Glossy satin-silk feel with gentle hold and a polished look.',
     colors: ['Skin Satin'],
@@ -98,7 +98,7 @@ window.BerryBabesProducts = {
   'spring-bloom': {
     name: 'Classic Silk Edit',
     category: 'Seasonal',
-    price: 150,
+    price: 149,
     image: 'images/1.jpeg',
     description: 'Lightweight silk scrunchie made for effortless, all-day styling.',
     colors: ['Plain Scrunchie'],
