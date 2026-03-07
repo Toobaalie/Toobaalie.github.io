@@ -3,15 +3,18 @@
 		"name": "Golden Pearl Silk",
 		"category": "Silk",
 		"price": 199,
-		"image": "images/golden pearl diff 2.jpeg",
+		"image": "images/golden pearl diff.jpeg",
 		"description": "Premium silk scrunchie with a soft, smooth finish for everyday wear.",
 		"colors": [
-			"Golden Pearl A",
-			"Golden Pearl B"
+			"Golden Pear"
 		],
 		"colorImages": {
-			"Golden Pearl A": "images/golden pearl diff.jpeg"
+			"Golden Pear": "images/golden pearl diff.jpeg"
 		},
+		"galleryImages": [
+			"images/golden pearl diff.jpeg",
+			"images/golden pearl diff 2.jpeg"
+		],
 		"reviews": []
 	},
 	"pearl-collection": {
