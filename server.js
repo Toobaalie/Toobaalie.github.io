@@ -154,13 +154,8 @@ function ensureCustomerReviewsFile() {
 function readOrders() {
   ensureOrdersFile();
   const raw = fs.readFileSync(ORDERS_PATH, 'utf8');
-  try {
-    const parsed = JSON.parse(raw || '[]');
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    fs.writeFileSync(ORDERS_PATH, '[]', 'utf8');
-    return [];
-  }
+  const parsed = JSON.parse(raw || '[]');
+  return Array.isArray(parsed) ? parsed : [];
 }
 
 function writeOrders(orders) {
@@ -171,13 +166,8 @@ function writeOrders(orders) {
 function readSubscribers() {
   ensureSubscribersFile();
   const raw = fs.readFileSync(SUBSCRIBERS_PATH, 'utf8');
-  try {
-    const parsed = JSON.parse(raw || '[]');
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    fs.writeFileSync(SUBSCRIBERS_PATH, '[]', 'utf8');
-    return [];
-  }
+  const parsed = JSON.parse(raw || '[]');
+  return Array.isArray(parsed) ? parsed : [];
 }
 
 function writeSubscribers(subscribers) {
@@ -203,13 +193,8 @@ async function sendEmail({ to, subject, html }) {
 function readCustomerReviews() {
   ensureCustomerReviewsFile();
   const raw = fs.readFileSync(CUSTOMER_REVIEWS_PATH, 'utf8');
-  try {
-    const parsed = JSON.parse(raw || '[]');
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    fs.writeFileSync(CUSTOMER_REVIEWS_PATH, '[]', 'utf8');
-    return [];
-  }
+  const parsed = JSON.parse(raw || '[]');
+  return Array.isArray(parsed) ? parsed : [];
 }
 
 function writeCustomerReviews(reviews) {
@@ -286,9 +271,9 @@ app.post('/api/orders', async (req, res) => {
       phone: String(payload.phone).trim(),
       email: String(payload.email || '').trim(),
       address: String(payload.address).trim(),
-      state: String(payload.state).trim(),
-      city: String(payload.city).trim(),
-      postalCode: String(payload.postalCode).trim(),
+      state: String(payload.state || 'Not provided').trim(),
+      city: String(payload.city || 'Not provided').trim(),
+      postalCode: String(payload.postalCode || 'Not provided').trim(),
       notes: String(payload.notes || '').trim(),
       items: payload.items,
       total: Number(payload.total) || 0,
