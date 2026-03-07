@@ -47,6 +47,7 @@
       <section class="checkout-form-card admin-product-form-card">
         <h2>Add / Update Product</h2>
         <form id="productForm" class="checkout-form" novalidate>
+          <input type="text" id="productId" placeholder="Product ID (auto for new product)" readonly />
           <div class="form-row">
             <input type="text" id="productName" placeholder="Product Name" required minlength="2" />
             <input type="text" id="productCategory" placeholder="Category (Silk, Plain, etc.)" required minlength="2" />
@@ -58,9 +59,14 @@
           <textarea id="productDescription" rows="3" placeholder="Product Description" required minlength="10"></textarea>
           <textarea id="productColors" rows="2" placeholder="Colors (comma separated, e.g. Red, Blue, Black)" required></textarea>
           <textarea id="productGallery" rows="2" placeholder="Gallery image paths (comma separated, optional)"></textarea>
-          <button type="submit" class="btn btn--primary">
-            <i class="fas fa-plus-circle"></i> Save Product
-          </button>
+          <div class="admin-toolbar">
+            <button type="submit" class="btn btn--primary" id="saveProductBtn">
+              <i class="fas fa-plus-circle"></i> Save Product
+            </button>
+            <button type="button" class="btn btn--primary" id="cancelEditProductBtn" style="display:none;">
+              <i class="fas fa-times-circle"></i> Cancel Edit
+            </button>
+          </div>
         </form>
       </section>
 

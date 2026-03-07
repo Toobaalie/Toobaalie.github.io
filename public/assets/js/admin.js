@@ -164,10 +164,69 @@ function productCard([id, product]) {
       <p><strong>Image:</strong> ${escapeHtml(product.image || '-')}</p>
       <p>${escapeHtml(product.description || '')}</p>
       <div class="admin-review-actions">
+        <button type="button" class="admin-review-btn" data-product-action="edit">Edit Product</button>
         <button type="button" class="admin-review-btn" data-product-action="delete">Delete Product</button>
       </div>
     </article>
   `;
+}
+
+function setProductFormMode(isEditing) {
+  const saveButton = document.getElementById('saveProductBtn');
+  const cancelButton = document.getElementById('cancelEditProductBtn');
+  const idInput = document.getElementById('productId');
+
+  if (saveButton) {
+    saveButton.innerHTML = isEditing
+      ? '<i class="fas fa-save"></i> Update Product'
+      : '<i class="fas fa-plus-circle"></i> Save Product';
+  }
+
+  if (cancelButton) {
+    cancelButton.style.display = isEditing ? 'inline-flex' : 'none';
+  }
+
+  if (idInput) {
+    idInput.placeholder = isEditing
+      ? 'Editing existing product ID'
+      : 'Product ID (auto for new product)';
+  }
+}
+
+function resetProductForm(form) {
+  form.reset();
+  const idInput = document.getElementById('productId');
+  if (idInput) {
+    idInput.value = '';
+  }
+  setProductFormMode(false);
+}
+
+function fillProductFormForEdit(id, product) {
+  const idInput = document.getElementById('productId');
+  const nameInput = document.getElementById('productName');
+  const categoryInput = document.getElementById('productCategory');
+  const priceInput = document.getElementById('productPrice');
+  const imageInput = document.getElementById('productImage');
+  const descriptionInput = document.getElementById('productDescription');
+  const colorsInput = document.getElementById('productColors');
+  const galleryInput = document.getElementById('productGallery');
+
+  if (!idInput || !nameInput || !categoryInput || !priceInput || !imageInput || !descriptionInput || !colorsInput || !galleryInput) {
+    return;
+  }
+
+  idInput.value = id;
+  nameInput.value = product.name || '';
+  categoryInput.value = product.category || '';
+  priceInput.value = Number(product.price || 0);
+  imageInput.value = product.image || '';
+  descriptionInput.value = product.description || '';
+  colorsInput.value = Array.isArray(product.colors) ? product.colors.join(', ') : '';
+  galleryInput.value = Array.isArray(product.galleryImages) ? product.galleryImages.join(', ') : '';
+
+  setProductFormMode(true);
+  nameInput.focus();
 }
 
 function renderOrders(orders) {
@@ -332,6 +391,7 @@ async function loadAdminData() {
 
 async function saveProductFromForm(form) {
   const payload = {
+    id: document.getElementById('productId').value.trim(),
     name: document.getElementById('productName').value.trim(),
     category: document.getElementById('productCategory').value.trim(),
     price: Number(document.getElementById('productPrice').value || 0),
@@ -352,7 +412,7 @@ async function saveProductFromForm(form) {
     throw new Error(body.error || 'Unable to save product');
   }
 
-  form.reset();
+  resetProductForm(form);
 }
 
 async function deleteProduct(productId) {
@@ -399,6 +459,7 @@ async function clearCollection(endpoint, label) {
 function setupActions(getState, refreshData) {
   const productForm = document.getElementById('productForm');
   const productsContainer = document.getElementById('adminProducts');
+  const cancelEditButton = document.getElementById('cancelEditProductBtn');
   const refreshButton = document.getElementById('refreshAdmin');
   const exportOrdersButton = document.getElementById('exportOrders');
   const exportSubscribersButton = document.getElementById('exportSubscribers');
@@ -406,13 +467,23 @@ function setupActions(getState, refreshData) {
   const clearSubscribersButton = document.getElementById('clearSubscribers');
   const reviewsContainer = document.getElementById('adminReviews');
 
+  setProductFormMode(false);
+
+  if (cancelEditButton && productForm) {
+    cancelEditButton.addEventListener('click', () => {
+      resetProductForm(productForm);
+      setStatus('Edit cancelled. You can add a new product now.');
+    });
+  }
+
   if (productForm) {
     productForm.addEventListener('submit', async event => {
       event.preventDefault();
+      const editingId = document.getElementById('productId').value.trim();
       try {
         await saveProductFromForm(productForm);
         await refreshData();
-        setStatus('Product saved successfully.');
+        setStatus(editingId ? 'Product updated successfully.' : 'Product saved successfully.');
       } catch (error) {
         setStatus(error.message || 'Unable to save product.', true);
       }
@@ -421,14 +492,32 @@ function setupActions(getState, refreshData) {
 
   if (productsContainer) {
     productsContainer.addEventListener('click', async event => {
-      const button = event.target.closest('[data-product-action="delete"]');
+      const button = event.target.closest('[data-product-action]');
       if (!button) return;
 
       const card = button.closest('[data-product-id]');
       if (!card) return;
 
+      const productId = card.dataset.productId;
+      const action = button.dataset.productAction;
+
+      if (action === 'edit') {
+        const product = getState().products[productId];
+        if (!product) {
+          setStatus('Unable to load this product for editing.', true);
+          return;
+        }
+        fillProductFormForEdit(productId, product);
+        setStatus(`Editing product: ${product.name || productId}`);
+        return;
+      }
+
+      if (action !== 'delete') {
+        return;
+      }
+
       try {
-        const deleted = await deleteProduct(card.dataset.productId);
+        const deleted = await deleteProduct(productId);
         if (!deleted) return;
         await refreshData();
         setStatus('Product deleted.');
