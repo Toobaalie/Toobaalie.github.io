@@ -147,6 +147,22 @@ function addToCart(name, price, productId, color = 'Default', image = '') {
 
 updateCartBadge();
 
+function resolveApiBase() {
+  const host = window.location.hostname;
+  const canonicalApi = 'https://berrybabes.me';
+  const sameOriginHosts = new Set(['berrybabes.me', 'localhost', '127.0.0.1']);
+
+  if (sameOriginHosts.has(host) || host.endsWith('.railway.app')) {
+    return '';
+  }
+
+  if (host === 'www.berrybabes.me') {
+    return canonicalApi;
+  }
+
+  return canonicalApi;
+}
+
 // ─── Toast ────────────────────────────────────────────────────
 function showToast(message) {
   const toast = document.getElementById('toast');
@@ -157,7 +173,7 @@ function showToast(message) {
 }
 
 // ─── Newsletter ───────────────────────────────────────────────
-function handleNewsletter(e) {
+async function handleNewsletter(e) {
   e.preventDefault();
   const form = e.target;
   const input = form.querySelector('input[type="email"]');
@@ -168,31 +184,49 @@ function handleNewsletter(e) {
     return;
   }
 
-  fetch('/api/subscribe', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ email })
-  })
-    .then(async response => {
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(payload.error || 'Subscription failed');
-      }
+  const apiBase = resolveApiBase();
+  const candidateBases = Array.from(new Set([apiBase, 'https://berrybabes.me']));
+  const submitBtn = form.querySelector('button[type="submit"]');
+  if (submitBtn) submitBtn.disabled = true;
 
-      if (payload.alreadySubscribed) {
-        showToast('✅ You are already subscribed.');
-      } else if (payload.emailSent) {
-        showToast('🎉 Subscribed successfully! Welcome email sent.');
-      } else {
-        showToast('🎉 Subscribed successfully! Email service is currently unavailable.');
+  let lastError = null;
+  try {
+    for (const base of candidateBases) {
+      const endpoint = `${base}/api/subscribe`;
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email })
+        });
+
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(payload.error || 'Subscription failed');
+        }
+
+        if (payload.alreadySubscribed) {
+          showToast('You are already subscribed.');
+        } else if (payload.emailSent) {
+          showToast('Subscribed successfully! Welcome email sent.');
+        } else {
+          showToast('Subscribed successfully!');
+        }
+        form.reset();
+        return;
+      } catch (error) {
+        lastError = error;
       }
-      form.reset();
-    })
-    .catch(error => {
-      showToast(`⚠️ ${error.message}`);
-    });
+    }
+
+    throw lastError || new Error('Subscription failed');
+  } catch (error) {
+    showToast(`Could not subscribe: ${error.message || 'Please try again.'}`);
+  } finally {
+    if (submitBtn) submitBtn.disabled = false;
+  }
 }
 
 // ─── Contact Form ─────────────────────────────────────────────

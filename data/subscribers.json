@@ -1,26 +1,2 @@
 [
-  {
-    "email": "live-check-1772751128@example.com",
-    "createdAt": "2026-03-05T22:52:10.324Z"
-  },
-  {
-    "email": "smtp-check-1772750894@example.com",
-    "createdAt": "2026-03-05T22:48:16.970Z"
-  },
-  {
-    "email": "diagnose-smtp@example.com",
-    "createdAt": "2026-03-05T22:39:03.120Z"
-  },
-  {
-    "email": "toobaalisiddiqui@gmail.com",
-    "createdAt": "2026-03-05T22:38:18.939Z"
-  },
-  {
-    "email": "check-email-test@example.com",
-    "createdAt": "2026-03-05T22:36:48.582Z"
-  },
-  {
-    "email": "test@example.com",
-    "createdAt": "2026-03-05T22:20:02.654Z"
-  }
 ]
