@@ -13,9 +13,11 @@ const CANONICAL_HOST = process.env.CANONICAL_HOST || 'berrybabes.me';
 const ROOT_DIR = __dirname;
 const PUBLIC_DIR = path.join(ROOT_DIR, 'public');
 const IMAGES_DIR = path.join(PUBLIC_DIR, 'images');
+const IS_RAILWAY = Boolean(process.env.RAILWAY_PROJECT_ID || process.env.RAILWAY_ENVIRONMENT);
+const DEFAULT_DATA_DIR = IS_RAILWAY ? '/data' : path.join(ROOT_DIR, 'data');
 const DATA_DIR = process.env.DATA_DIR
   ? path.resolve(process.env.DATA_DIR)
-  : path.join(ROOT_DIR, 'data');
+  : DEFAULT_DATA_DIR;
 const ORDERS_PATH = path.join(DATA_DIR, 'orders.json');
 const SUBSCRIBERS_PATH = path.join(DATA_DIR, 'subscribers.json');
 const CUSTOMER_REVIEWS_PATH = path.join(DATA_DIR, 'customer-reviews.json');
@@ -830,6 +832,9 @@ app.listen(PORT, HOST, () => {
   ensureProductsFile();
   console.log(`Data directory: ${DATA_DIR}`);
   console.log(`Order storage mode: local JSON file (${ORDERS_PATH}).`);
+  if (IS_RAILWAY && !process.env.DATA_DIR) {
+    console.log('DATA_DIR is not set. Using default /data. Attach Railway Volume at /data to persist reviews/orders.');
+  }
   if (!smtpConfigured) {
     console.log('Email service disabled: set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM in .env');
   }
