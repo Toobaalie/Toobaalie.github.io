@@ -55,6 +55,15 @@ function showToast(message) {
   setTimeout(() => toast.classList.remove('show'), 2500);
 }
 
+function showBlockingMessage(message) {
+  showToast(message);
+  try {
+    window.alert(message);
+  } catch {
+    // Ignore if alerts are blocked by browser settings.
+  }
+}
+
 function getCartItemsSafe() {
   if (window.CartStore && typeof window.CartStore.getCart === 'function') {
     return window.CartStore.getCart();
@@ -255,7 +264,7 @@ async function placeOrder(event) {
   const cartItems = getCartItemsSafe();
 
   if (!cartItems.length) {
-    showToast('Your cart is empty');
+    showBlockingMessage('Your cart is empty. Please add at least one product.');
     return;
   }
 
@@ -284,7 +293,13 @@ async function placeOrder(event) {
   ];
   const missing = requiredFields.filter(([, value]) => !String(value || '').trim()).map(([key]) => key);
   if (missing.length) {
-    showToast(`Please fill required fields: ${missing.join(', ')}`);
+    const firstMissingId = missing[0];
+    const firstMissingField = document.getElementById(firstMissingId);
+    if (firstMissingField) {
+      firstMissingField.focus();
+      firstMissingField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    showBlockingMessage(`Please fill required fields: ${missing.join(', ')}`);
     return;
   }
 
@@ -342,7 +357,7 @@ async function placeOrder(event) {
 
     throw lastError || new Error('Could not place order. Please try again.');
   } catch (error) {
-    showToast(`Could not place order: ${error.message || 'Network or server issue. Please try again.'}`);
+    showBlockingMessage(`Could not place order: ${error.message || 'Network or server issue. Please try again.'}`);
   } finally {
     if (submitButton) submitButton.disabled = false;
   }
