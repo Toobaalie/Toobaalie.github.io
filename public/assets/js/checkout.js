@@ -56,11 +56,45 @@ function showToast(message) {
 }
 
 function showBlockingMessage(message) {
+  // Keep UI responsive: use toast-only feedback instead of blocking alerts.
   showToast(message);
+}
+
+function buildOrderEndpoints() {
+  const sameOriginEndpoint = `${window.location.origin}/api/orders`;
+  const fallbackEndpoint = 'https://berrybabes.me/api/orders';
+  const endpoints = [sameOriginEndpoint];
+
+  if (!window.location.hostname.includes('berrybabes.me')) {
+    endpoints.push(fallbackEndpoint);
+  }
+
+  return Array.from(new Set(endpoints));
+}
+
+async function postOrderWithTimeout(endpoint, payload, timeoutMs = 8000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
   try {
-    window.alert(message);
-  } catch {
-    // Ignore if alerts are blocked by browser settings.
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+
+    const body = await response.json().catch(() => ({}));
+    return { response, body };
+  } catch (error) {
+    if (error && error.name === 'AbortError') {
+      throw new Error('Request timed out. Please try again.');
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -283,26 +317,16 @@ async function placeOrder(event) {
     createdAt: new Date().toISOString()
   };
 
-  const apiBase = resolveApiBase();
   const submitButton = document.getElementById('placeOrderBtn');
   if (submitButton) submitButton.disabled = true;
 
-  const candidateBases = Array.from(new Set(['https://berrybabes.me', apiBase, '']));
+  const candidateEndpoints = buildOrderEndpoints();
   let lastError = null;
 
   try {
-    for (const base of candidateBases) {
-      const endpoint = `${base}/api/orders`;
+    for (const endpoint of candidateEndpoints) {
       try {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(order)
-        });
-
-        const payload = await response.json().catch(() => ({}));
+        const { response, body: payload } = await postOrderWithTimeout(endpoint, order);
         if (!response.ok) {
           throw new Error(payload.error || `Failed to place order (HTTP ${response.status})`);
         }
@@ -346,13 +370,11 @@ async function placeOrder(event) {
 window.placeOrder = placeOrder;
 
 window.addEventListener('error', event => {
-  const message = `Checkout script error: ${event.message || 'Unknown error'}`;
-  showBlockingMessage(message);
+  console.error('Checkout script error:', event.message || event.error || event);
 });
 
 window.addEventListener('unhandledrejection', event => {
-  const reason = event && event.reason ? String(event.reason) : 'Unknown promise error';
-  showBlockingMessage(`Checkout async error: ${reason}`);
+  console.error('Checkout async error:', event && event.reason ? event.reason : event);
 });
 
 (function initCheckoutPage() {
@@ -364,6 +386,9 @@ window.addEventListener('unhandledrejection', event => {
   const form = document.getElementById('checkoutForm');
   if (form) {
     form.noValidate = true;
-    form.addEventListener('submit', placeOrder);
+    // Avoid double-submit when HTML already has inline onsubmit handler.
+    if (!form.hasAttribute('onsubmit')) {
+      form.addEventListener('submit', placeOrder);
+    }
   }
 })();
