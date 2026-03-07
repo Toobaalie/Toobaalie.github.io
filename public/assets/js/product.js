@@ -270,25 +270,6 @@ function renderProduct(product) {
   });
 }
 
-function renderReviews(product) {
-  const reviewsGrid = document.getElementById('reviewsGrid');
-  if (!reviewsGrid) return;
-
-  reviewsGrid.innerHTML = product.reviews
-    .map(
-      review => `
-      <article class="review-card">
-        <div class="review-card__top">
-          <h3>${review.name}</h3>
-          <span>${stars(review.rating)}</span>
-        </div>
-        <p>${review.text}</p>
-      </article>
-    `
-    )
-    .join('');
-}
-
 function renderMoreProducts(currentProductId) {
   const grid = document.getElementById('moreProductsGrid');
   if (!grid) return;
@@ -553,13 +534,16 @@ function initCustomerReviewForm(productId) {
       return;
     }
 
-    if (files.length) {
-      try {
-        imageDataList = await Promise.all(files.map(readImageFileAsDataUrl));
-      } catch {
-        showToast('Could not read one or more selected images');
-        return;
-      }
+    if (!files.length) {
+      showToast('Please upload at least one photo for your review');
+      return;
+    }
+
+    try {
+      imageDataList = await Promise.all(files.map(readImageFileAsDataUrl));
+    } catch {
+      showToast('Could not read one or more selected images');
+      return;
     }
 
     const submitBtn = form.querySelector('button[type="submit"]');
@@ -605,7 +589,6 @@ function initCustomerReviewForm(productId) {
   updateCartBadge();
   updateWishlistBadge();
   renderProduct(product);
-  renderReviews(product);
   bindReviewLightboxEvents();
   initCustomerReviewForm(window.currentProductId);
   loadCustomerReviews(window.currentProductId);

@@ -375,6 +375,20 @@ function isValidImageDataUrl(value) {
   return /^data:image\/[a-z0-9.+-]+;base64,/i.test(value);
 }
 
+function reviewHasImage(review) {
+  if (!review || typeof review !== 'object') return false;
+
+  const imageList = Array.isArray(review.imageDataList)
+    ? review.imageDataList.filter(Boolean)
+    : [];
+
+  if (imageList.length > 0) {
+    return true;
+  }
+
+  return Boolean(String(review.imageData || '').trim());
+}
+
 app.use(express.json({ limit: '30mb' }));
 app.use('/images', express.static(IMAGES_DIR));
 
@@ -715,7 +729,7 @@ app.get('/api/reviews', (req, res) => {
     const reviews = readCustomerReviews();
     const visibleReviews = includeAll
       ? reviews
-      : reviews.filter(item => item.approved !== false);
+      : reviews.filter(item => item.approved !== false && reviewHasImage(item));
 
     const filtered = productId
       ? visibleReviews.filter(item => item.productId === productId)

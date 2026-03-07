@@ -56,14 +56,6 @@
     <div class="container">
       <div class="product-detail" id="productDetail"></div>
 
-      <section class="reviews" id="reviewsSection">
-        <div class="section__header reviews__header">
-          <span class="section__tag">Trusted by customers</span>
-          <h2 class="section__title">Customer Reviews</h2>
-        </div>
-        <div class="reviews__grid" id="reviewsGrid"></div>
-      </section>
-
       <section class="customer-showcase section" id="customerShowcaseSection">
         <div class="section__header reviews__header">
           <span class="section__tag">Community Gallery</span>
@@ -86,9 +78,9 @@
             </div>
             <textarea id="customerReviewText" rows="4" maxlength="500" placeholder="Share your experience (10-500 characters)" required></textarea>
             <div class="customer-review-form__upload">
-              <label for="customerPhoto">Add photos (optional)</label>
-              <input type="file" id="customerPhoto" accept="image/*" multiple />
-              <small>You can select multiple images.</small>
+              <label for="customerPhoto">Add photos</label>
+              <input type="file" id="customerPhoto" accept="image/*" multiple required />
+              <small>Photo upload is required. You can select multiple images.</small>
             </div>
             <button type="submit" class="btn btn--primary">Submit Review</button>
           </form>
