@@ -18,7 +18,7 @@ window.BerryBabesProducts = {
   'pearl-collection': {
     name: 'Pearl Collection',
     category: 'Silk',
-    price: 300,
+    price: 299,
     image: 'images/pearl black.jpeg',
     description: 'Luxe silk texture with elegant color options for day and night looks.',
     colors: ['Pearl Black', 'Pearl Blue', 'Pearl Blue Luxe', 'Pearl Grey'],
@@ -37,7 +37,7 @@ window.BerryBabesProducts = {
   'cotton-classic': {
     name: 'Printed Fabric Set',
     category: 'Printed',
-    price: 150,
+    price: 149,
     image: 'images/printed fabric.jpeg',
     description: 'Soft printed fabric scrunchie that adds a playful pop to your style.',
     colors: ['Sky Bloom', 'Cherry Bloom', 'Blossom Pink', 'Smoke Vibe'],
@@ -77,7 +77,7 @@ window.BerryBabesProducts = {
   'silk-bundle': {
     name: 'Black Silk Scrunchie',
     category: 'Silk',
-    price: 150,
+    price: 199,
     image: 'images/black plain silk.jpeg',
     description: 'Classic black silk scrunchie with a sleek look and comfortable grip.',
     colors: ['Black'],
