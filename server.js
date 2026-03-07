@@ -2,7 +2,6 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const nodemailer = require('nodemailer');
-const { MongoClient } = require('mongodb');
 require('dotenv').config();
 
 const app = express();
@@ -15,40 +14,9 @@ const IMAGES_DIR = path.join(PUBLIC_DIR, 'images');
 const ORDERS_PATH = path.join(ROOT_DIR, 'data', 'orders.json');
 const SUBSCRIBERS_PATH = path.join(ROOT_DIR, 'data', 'subscribers.json');
 const CUSTOMER_REVIEWS_PATH = path.join(ROOT_DIR, 'data', 'customer-reviews.json');
-const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGODB_URL || '';
-const MONGODB_DB = process.env.MONGODB_DB || process.env.MONGO_DB_DB || 'berrybabes';
-const REQUIRE_MONGODB_FOR_ORDERS = true;
 const SMTP_FROM = process.env.SMTP_FROM || process.env.SMTP_USER || '';
 const SMTP_FROM_NAME = process.env.SMTP_FROM_NAME || 'BerryBabes Orders';
 const EMAIL_NOTIFICATIONS_ENABLED = false;
-
-let mongoClient = null;
-let mongoDb = null;
-
-async function ensureMongoConnection() {
-  if (!MONGODB_URI) return false;
-  if (mongoDb) return true;
-
-  try {
-    if (!mongoClient) {
-      mongoClient = new MongoClient(MONGODB_URI, {
-        serverSelectionTimeoutMS: 5000
-      });
-    }
-
-    await mongoClient.connect();
-    mongoDb = mongoClient.db(MONGODB_DB);
-    return true;
-  } catch (error) {
-    console.error('MongoDB connection failed:', error.message || error);
-    mongoDb = null;
-    return false;
-  }
-}
-
-function getOrdersCollection() {
-  return mongoDb ? mongoDb.collection('orders') : null;
-}
 
 function inferSmtpDefaults(emailAddress) {
   const domain = String(emailAddress || '').split('@')[1]?.toLowerCase() || '';
@@ -199,57 +167,22 @@ function writeOrders(orders) {
   fs.writeFileSync(ORDERS_PATH, JSON.stringify(orders, null, 2), 'utf8');
 }
 
-async function readOrdersStorage() {
-  if (await ensureMongoConnection()) {
-    const collection = getOrdersCollection();
-    if (collection) {
-      const rows = await collection
-        .find({}, { projection: { _id: 0 } })
-        .sort({ createdAt: -1 })
-        .limit(1000)
-        .toArray();
-      return Array.isArray(rows) ? rows : [];
-    }
-  }
-
+function readOrdersStorage() {
   return readOrders();
 }
 
-async function saveOrderStorage(order) {
-  if (await ensureMongoConnection()) {
-    const collection = getOrdersCollection();
-    if (collection) {
-      await collection.insertOne(order);
-      return;
-    }
-  }
-
+function saveOrderStorage(order) {
   const orders = readOrders();
   orders.unshift(order);
   writeOrders(orders);
 }
 
-async function clearOrdersStorage() {
-  if (await ensureMongoConnection()) {
-    const collection = getOrdersCollection();
-    if (collection) {
-      await collection.deleteMany({});
-      return;
-    }
-  }
-
+function clearOrdersStorage() {
   writeOrders([]);
 }
 
-async function getOrdersStorageBackend() {
-  if (await ensureMongoConnection()) {
-    const collection = getOrdersCollection();
-    if (collection) {
-      return 'mongodb';
-    }
-  }
-
-  return 'json-fallback';
+function getOrdersStorageBackend() {
+  return 'local-json';
 }
 
 function readSubscribers() {
@@ -362,17 +295,6 @@ app.post('/api/subscribe', async (req, res) => {
 
 app.post('/api/orders', async (req, res) => {
   try {
-    if (REQUIRE_MONGODB_FOR_ORDERS) {
-      const mongoReady = await ensureMongoConnection();
-      if (!mongoReady || !getOrdersCollection()) {
-        return res.status(503).json({
-          error: 'Order service unavailable: MongoDB is not connected. Please configure MONGODB_URI and try again.',
-          storageBackend: 'json-fallback',
-          requiresMongo: true
-        });
-      }
-    }
-
     const payload = req.body || {};
     const required = ['fullName', 'phone', 'address', 'items'];
     const missing = required.filter(key => !payload[key] || (Array.isArray(payload[key]) && !payload[key].length));
@@ -396,8 +318,8 @@ app.post('/api/orders', async (req, res) => {
       createdAt: new Date().toISOString()
     };
 
-    await saveOrderStorage(order);
-    const storageBackend = await getOrdersStorageBackend();
+    saveOrderStorage(order);
+    const storageBackend = getOrdersStorageBackend();
 
     let emailSent = false;
     let emailStatus = 'disabled';
@@ -440,8 +362,8 @@ app.post('/api/orders', async (req, res) => {
 
 app.get('/api/orders', async (_req, res) => {
   try {
-    const orders = await readOrdersStorage();
-    const storageBackend = await getOrdersStorageBackend();
+    const orders = readOrdersStorage();
+    const storageBackend = getOrdersStorageBackend();
     return res.json({ orders, storageBackend });
   } catch (error) {
     return res.status(500).json({ error: 'Unable to read orders' });
@@ -450,7 +372,7 @@ app.get('/api/orders', async (_req, res) => {
 
 app.delete('/api/orders', async (_req, res) => {
   try {
-    await clearOrdersStorage();
+    clearOrdersStorage();
     return res.json({ success: true });
   } catch (error) {
     return res.status(500).json({ error: 'Unable to clear orders' });
