@@ -2366,21 +2366,26 @@ h1, h2, h3, h4, h5 { font-family: var(--font-serif); line-height: 1.2; }
 /* Keep hero banner in desktop composition on phones. */
 @media (max-width: 768px) {
   .hero {
-    height: 88vh;
-    min-height: 520px;
-    max-height: 860px;
-    background: var(--light-gray);
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    aspect-ratio: 16 / 9;
+    background: #1f1c1d;
+  }
+
+  .slider {
+    height: 100%;
   }
 
   .slide {
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-color: transparent;
+    background-size: contain !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    background-color: #1f1c1d !important;
   }
 
   .slide--img4 {
-    background-position: center 28%;
+    background-position: center center !important;
   }
 
   .slide__overlay {
@@ -2397,14 +2402,14 @@ h1, h2, h3, h4, h5 { font-family: var(--font-serif); line-height: 1.2; }
   }
 
   .slide__title {
-    font-size: clamp(2.4rem, 6vw, 5rem);
+    font-size: clamp(2rem, 5.2vw, 5rem);
   }
 
   .slide__desc {
     max-width: 420px;
-    margin-bottom: 2rem;
-    font-size: 1rem;
-    line-height: 1.7;
+    margin-bottom: 1.3rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
   }
 
   .slider__arrow {
@@ -2429,12 +2434,11 @@ h1, h2, h3, h4, h5 { font-family: var(--font-serif); line-height: 1.2; }
 
 @media (max-width: 480px) {
   .hero {
-    height: 88vh;
-    min-height: 520px;
+    aspect-ratio: 16 / 10;
   }
 
   .slide {
-    background-position: center;
+    background-position: center center !important;
   }
 
   .slide__content {
@@ -2446,14 +2450,15 @@ h1, h2, h3, h4, h5 { font-family: var(--font-serif); line-height: 1.2; }
   }
 
   .slide__title {
-    font-size: clamp(2.4rem, 6vw, 5rem);
-    margin-bottom: 1.25rem;
+    font-size: clamp(1.4rem, 5vw, 2rem);
+    margin-bottom: 0.6rem;
   }
 
   .slide__desc {
-    font-size: 1rem;
-    line-height: 1.7;
-    margin-bottom: 2rem;
+    font-size: 0.76rem;
+    line-height: 1.35;
+    margin-bottom: 0.8rem;
+    max-width: 280px;
   }
 
   .slide__tag {
