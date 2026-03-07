@@ -167,22 +167,22 @@ function writeOrders(orders) {
   fs.writeFileSync(ORDERS_PATH, JSON.stringify(orders, null, 2), 'utf8');
 }
 
-function readOrdersStorage() {
+async function readOrdersStorage() {
   return readOrders();
 }
 
-function saveOrderStorage(order) {
+async function saveOrderStorage(order) {
   const orders = readOrders();
   orders.unshift(order);
   writeOrders(orders);
 }
 
-function clearOrdersStorage() {
+async function clearOrdersStorage() {
   writeOrders([]);
 }
 
-function getOrdersStorageBackend() {
-  return 'local-json';
+async function getOrdersStorageBackend() {
+  return 'json-local';
 }
 
 function readSubscribers() {
@@ -318,8 +318,8 @@ app.post('/api/orders', async (req, res) => {
       createdAt: new Date().toISOString()
     };
 
-    saveOrderStorage(order);
-    const storageBackend = getOrdersStorageBackend();
+    await saveOrderStorage(order);
+    const storageBackend = await getOrdersStorageBackend();
 
     let emailSent = false;
     let emailStatus = 'disabled';
@@ -362,8 +362,8 @@ app.post('/api/orders', async (req, res) => {
 
 app.get('/api/orders', async (_req, res) => {
   try {
-    const orders = readOrdersStorage();
-    const storageBackend = getOrdersStorageBackend();
+    const orders = await readOrdersStorage();
+    const storageBackend = await getOrdersStorageBackend();
     return res.json({ orders, storageBackend });
   } catch (error) {
     return res.status(500).json({ error: 'Unable to read orders' });
@@ -372,7 +372,7 @@ app.get('/api/orders', async (_req, res) => {
 
 app.delete('/api/orders', async (_req, res) => {
   try {
-    clearOrdersStorage();
+    await clearOrdersStorage();
     return res.json({ success: true });
   } catch (error) {
     return res.status(500).json({ error: 'Unable to clear orders' });
@@ -500,17 +500,7 @@ app.listen(PORT, HOST, () => {
   ensureOrdersFile();
   ensureSubscribersFile();
   ensureCustomerReviewsFile();
-  if (MONGODB_URI) {
-    ensureMongoConnection().then(connected => {
-      if (connected) {
-        console.log(`MongoDB connected (db: ${MONGODB_DB})`);
-      } else {
-        console.log('MongoDB unavailable; using local JSON storage for orders.');
-      }
-    });
-  } else {
-    console.log('MongoDB not configured; using local JSON storage for orders.');
-  }
+  console.log('Order storage mode: local JSON file (data/orders.json).');
   if (!smtpConfigured) {
     console.log('Email service disabled: set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM in .env');
   }
