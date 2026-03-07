@@ -17,7 +17,7 @@ window.BerryBabesProducts = {
   },
   'pearl-collection': {
     name: 'Pearl Collection',
-    category: 'Silk',
+    category: 'Pearl',
     price: 149,
     image: 'images/pearl black.jpeg',
     description: 'Luxe silk texture with elegant color options for day and night looks.',
