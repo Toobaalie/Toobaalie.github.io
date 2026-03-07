@@ -154,8 +154,13 @@ function ensureCustomerReviewsFile() {
 function readOrders() {
   ensureOrdersFile();
   const raw = fs.readFileSync(ORDERS_PATH, 'utf8');
-  const parsed = JSON.parse(raw || '[]');
-  return Array.isArray(parsed) ? parsed : [];
+  try {
+    const parsed = JSON.parse(raw || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    fs.writeFileSync(ORDERS_PATH, '[]', 'utf8');
+    return [];
+  }
 }
 
 function writeOrders(orders) {
@@ -166,8 +171,13 @@ function writeOrders(orders) {
 function readSubscribers() {
   ensureSubscribersFile();
   const raw = fs.readFileSync(SUBSCRIBERS_PATH, 'utf8');
-  const parsed = JSON.parse(raw || '[]');
-  return Array.isArray(parsed) ? parsed : [];
+  try {
+    const parsed = JSON.parse(raw || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    fs.writeFileSync(SUBSCRIBERS_PATH, '[]', 'utf8');
+    return [];
+  }
 }
 
 function writeSubscribers(subscribers) {
@@ -193,8 +203,13 @@ async function sendEmail({ to, subject, html }) {
 function readCustomerReviews() {
   ensureCustomerReviewsFile();
   const raw = fs.readFileSync(CUSTOMER_REVIEWS_PATH, 'utf8');
-  const parsed = JSON.parse(raw || '[]');
-  return Array.isArray(parsed) ? parsed : [];
+  try {
+    const parsed = JSON.parse(raw || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    fs.writeFileSync(CUSTOMER_REVIEWS_PATH, '[]', 'utf8');
+    return [];
+  }
 }
 
 function writeCustomerReviews(reviews) {
@@ -257,7 +272,7 @@ app.post('/api/subscribe', async (req, res) => {
 app.post('/api/orders', async (req, res) => {
   try {
     const payload = req.body || {};
-    const required = ['fullName', 'phone', 'address', 'state', 'city', 'postalCode', 'items'];
+    const required = ['fullName', 'phone', 'address', 'items'];
     const missing = required.filter(key => !payload[key] || (Array.isArray(payload[key]) && !payload[key].length));
 
     if (missing.length) {

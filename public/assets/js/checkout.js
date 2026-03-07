@@ -286,10 +286,7 @@ async function placeOrder(event) {
   const requiredFields = [
     ['fullName', order.fullName],
     ['phone', order.phone],
-    ['address', order.address],
-    ['state', order.state],
-    ['city', order.city],
-    ['postalCode', order.postalCode]
+    ['address', order.address]
   ];
   const missing = requiredFields.filter(([, value]) => !String(value || '').trim()).map(([key]) => key);
   if (missing.length) {
