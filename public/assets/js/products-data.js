@@ -21,11 +21,10 @@ window.BerryBabesProducts = {
     price: 149,
     image: 'images/pearl black.jpeg',
     description: 'Luxe silk texture with elegant color options for day and night looks.',
-    colors: ['Pearl Black', 'Pearl Blue', 'Pearl Blue Luxe', 'Pearl Grey'],
+    colors: ['Pearl Black', 'Pearl Blue', 'Pearl Grey'],
     colorImages: {
       'Pearl Black': 'images/pearl black.jpeg',
       'Pearl Blue': 'images/pearl blue.jpeg',
-      'Pearl Blue Luxe': 'images/4b09add7d9792a75988407081e156d27.jpg',
       'Pearl Grey': 'images/pearl grey.jpeg'
     },
     reviews: [
@@ -96,7 +95,7 @@ window.BerryBabesProducts = {
     ]
   },
   'spring-bloom': {
-    name: 'Classic Silk Edit',
+    name: 'Silk Navy Blue',
     category: 'Plain',
     price: 149,
     image: 'images/1.jpeg',
@@ -105,6 +104,10 @@ window.BerryBabesProducts = {
     colorImages: {
       'Plain Scrunchie': 'images/1.jpeg'
     },
+    galleryImages: [
+      'images/1.jpeg',
+      'images/4b09add7d9792a75988407081e156d27.jpg'
+    ],
     reviews: [
       { name: 'Rida', rating: 5, text: 'Classic silk options look soft and premium.' },
       { name: 'Areeba', rating: 4, text: 'Nice daily-wear silk tones.' },
