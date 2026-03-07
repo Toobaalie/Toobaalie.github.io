@@ -22,6 +22,7 @@ const ORDERS_PATH = path.join(DATA_DIR, 'orders.json');
 const SUBSCRIBERS_PATH = path.join(DATA_DIR, 'subscribers.json');
 const CUSTOMER_REVIEWS_PATH = path.join(DATA_DIR, 'customer-reviews.json');
 const PRODUCTS_PATH = path.join(DATA_DIR, 'products.json');
+const REPO_PRODUCTS_PATH = path.join(ROOT_DIR, 'data', 'products.json');
 const SMTP_FROM = process.env.SMTP_FROM || process.env.SMTP_USER || '';
 const SMTP_FROM_NAME = process.env.SMTP_FROM_NAME || 'BerryBabes Orders';
 const EMAIL_NOTIFICATIONS_ENABLED = false;
@@ -274,15 +275,45 @@ function ensureProductsFile() {
     fs.mkdirSync(dir, { recursive: true });
   }
   if (!fs.existsSync(PRODUCTS_PATH)) {
-    fs.writeFileSync(PRODUCTS_PATH, '{}', 'utf8');
+    let seed = '{}';
+    if (PRODUCTS_PATH !== REPO_PRODUCTS_PATH && fs.existsSync(REPO_PRODUCTS_PATH)) {
+      const repoRaw = fs.readFileSync(REPO_PRODUCTS_PATH, 'utf8');
+      const repoParsed = JSON.parse(repoRaw || '{}');
+      if (repoParsed && typeof repoParsed === 'object' && !Array.isArray(repoParsed) && Object.keys(repoParsed).length) {
+        seed = JSON.stringify(repoParsed, null, 2);
+      }
+    }
+    fs.writeFileSync(PRODUCTS_PATH, seed, 'utf8');
   }
+}
+
+function parseProductsRaw(raw) {
+  const parsed = JSON.parse(raw || '{}');
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+  return parsed;
+}
+
+function readRepoProductsDefaults() {
+  if (!fs.existsSync(REPO_PRODUCTS_PATH)) return {};
+  const repoRaw = fs.readFileSync(REPO_PRODUCTS_PATH, 'utf8');
+  return parseProductsRaw(repoRaw);
 }
 
 function readProducts() {
   ensureProductsFile();
   const raw = fs.readFileSync(PRODUCTS_PATH, 'utf8');
-  const parsed = JSON.parse(raw || '{}');
-  return (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : {};
+  const parsed = parseProductsRaw(raw);
+
+  // If external DATA_DIR has an empty products file, auto-restore defaults from repository.
+  if (PRODUCTS_PATH !== REPO_PRODUCTS_PATH && Object.keys(parsed).length === 0) {
+    const repoDefaults = readRepoProductsDefaults();
+    if (Object.keys(repoDefaults).length > 0) {
+      fs.writeFileSync(PRODUCTS_PATH, JSON.stringify(repoDefaults, null, 2), 'utf8');
+      return repoDefaults;
+    }
+  }
+
+  return parsed;
 }
 
 function writeProducts(products) {
