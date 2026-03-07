@@ -10,7 +10,7 @@ const recommendationCatalog = {
   'cotton-classic': { id: 'cotton-classic', name: 'Printed Fabric Set', image: 'images/printed fabric.jpeg', category: 'printed' },
   'satin-dream': { id: 'satin-dream', name: 'Skin Satin Set', image: 'images/silk 4.jpeg', category: 'silk' },
   'silk-bundle': { id: 'silk-bundle', name: 'Black Silk Scrunchie', image: 'images/black plain silk.jpeg', category: 'silk' },
-  'spring-bloom': { id: 'spring-bloom', name: 'Classic Silk Edit', image: 'images/1.jpeg', category: 'silk' }
+  'spring-bloom': { id: 'spring-bloom', name: 'Classic Silk Edit', image: 'images/WhatsApp Image 2026-03-07 at 2.47.20 AM.jpeg', category: 'silk' }
 };
 
 function getRecommendedProducts(items) {
