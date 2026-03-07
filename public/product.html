@@ -95,6 +95,7 @@
 
           <div class="customer-gallery" id="customerGallery"></div>
         </div>
+        <p class="customer-showcase__hint">Tap any customer photo to view full size.</p>
       </section>
 
       <section class="more-products section" id="moreProductsSection">
@@ -107,6 +108,17 @@
       </section>
     </div>
   </main>
+
+  <div class="review-lightbox" id="reviewLightbox" hidden>
+    <button type="button" class="review-lightbox__close" id="reviewLightboxClose" aria-label="Close image viewer">&times;</button>
+    <button type="button" class="review-lightbox__nav review-lightbox__nav--prev" id="reviewLightboxPrev" aria-label="Previous image">&#8249;</button>
+    <figure class="review-lightbox__figure">
+      <img id="reviewLightboxImage" src="" alt="Customer review image" />
+      <figcaption id="reviewLightboxCaption"></figcaption>
+      <p class="review-lightbox__counter" id="reviewLightboxCounter"></p>
+    </figure>
+    <button type="button" class="review-lightbox__nav review-lightbox__nav--next" id="reviewLightboxNext" aria-label="Next image">&#8250;</button>
+  </div>
 
   <footer class="footer">
     <div class="container">

@@ -4,6 +4,10 @@ let selectedColor = '';
 let selectedQuantity = 1;
 let selectedImage = '';
 const MAX_ITEM_QUANTITY = 10;
+const reviewImageBuckets = new Map();
+
+let reviewLightboxImages = [];
+let reviewLightboxIndex = 0;
 
 function getProductFromUrl() {
   const params = new URLSearchParams(window.location.search);
@@ -333,9 +337,94 @@ function readImageFileAsDataUrl(file) {
   });
 }
 
+function getReviewLightboxElements() {
+  return {
+    modal: document.getElementById('reviewLightbox'),
+    image: document.getElementById('reviewLightboxImage'),
+    caption: document.getElementById('reviewLightboxCaption'),
+    counter: document.getElementById('reviewLightboxCounter'),
+    close: document.getElementById('reviewLightboxClose'),
+    prev: document.getElementById('reviewLightboxPrev'),
+    next: document.getElementById('reviewLightboxNext')
+  };
+}
+
+function updateReviewLightboxView() {
+  const { modal, image, caption, counter, prev, next } = getReviewLightboxElements();
+  if (!modal || !image || !caption || !counter || !reviewLightboxImages.length) return;
+
+  const safeIndex = Math.max(0, Math.min(reviewLightboxIndex, reviewLightboxImages.length - 1));
+  reviewLightboxIndex = safeIndex;
+  const active = reviewLightboxImages[safeIndex];
+
+  image.src = active.src;
+  image.alt = active.alt;
+  caption.textContent = active.caption;
+  counter.textContent = `${safeIndex + 1} / ${reviewLightboxImages.length}`;
+
+  const canNavigate = reviewLightboxImages.length > 1;
+  if (prev) prev.style.display = canNavigate ? 'inline-flex' : 'none';
+  if (next) next.style.display = canNavigate ? 'inline-flex' : 'none';
+}
+
+function closeReviewLightbox() {
+  const { modal } = getReviewLightboxElements();
+  if (!modal) return;
+  modal.hidden = true;
+  document.body.style.overflow = '';
+}
+
+function openReviewLightbox(images, startIndex) {
+  const { modal } = getReviewLightboxElements();
+  if (!modal || !Array.isArray(images) || !images.length) return;
+
+  reviewLightboxImages = images;
+  reviewLightboxIndex = startIndex;
+  modal.hidden = false;
+  document.body.style.overflow = 'hidden';
+  updateReviewLightboxView();
+}
+
+function moveReviewLightbox(step) {
+  if (!reviewLightboxImages.length) return;
+  const total = reviewLightboxImages.length;
+  reviewLightboxIndex = (reviewLightboxIndex + step + total) % total;
+  updateReviewLightboxView();
+}
+
+function bindReviewLightboxEvents() {
+  const { modal, close, prev, next } = getReviewLightboxElements();
+  if (!modal || modal.dataset.bound === '1') return;
+
+  close?.addEventListener('click', closeReviewLightbox);
+  prev?.addEventListener('click', () => moveReviewLightbox(-1));
+  next?.addEventListener('click', () => moveReviewLightbox(1));
+
+  modal.addEventListener('click', event => {
+    if (event.target === modal) {
+      closeReviewLightbox();
+    }
+  });
+
+  document.addEventListener('keydown', event => {
+    if (modal.hidden) return;
+    if (event.key === 'Escape') {
+      closeReviewLightbox();
+    } else if (event.key === 'ArrowLeft') {
+      moveReviewLightbox(-1);
+    } else if (event.key === 'ArrowRight') {
+      moveReviewLightbox(1);
+    }
+  });
+
+  modal.dataset.bound = '1';
+}
+
 function renderCustomerGallery(reviews) {
   const gallery = document.getElementById('customerGallery');
   if (!gallery) return;
+
+  reviewImageBuckets.clear();
 
   if (!Array.isArray(reviews) || !reviews.length) {
     gallery.innerHTML = `
@@ -348,18 +437,38 @@ function renderCustomerGallery(reviews) {
   }
 
   gallery.innerHTML = reviews
-    .map(item => {
+    .map((item, reviewIndex) => {
       const images = Array.isArray(item.imageDataList) && item.imageDataList.length
         ? item.imageDataList
         : (item.imageData ? [item.imageData] : []);
 
+      const bucketId = `review-${reviewIndex}-${item.id || item.createdAt || 'x'}`;
+      reviewImageBuckets.set(
+        bucketId,
+        images.map((src, index) => ({
+          src,
+          alt: `${item.name} review photo ${index + 1}`,
+          caption: `${item.name} - ${formatReviewDate(item.createdAt)}`
+        }))
+      );
+
       let mediaHtml = '';
       if (images.length === 1) {
-        mediaHtml = `<div class="customer-gallery-card__media"><img src="${images[0]}" alt="${item.name} review photo" /></div>`;
+        mediaHtml = `<div class="customer-gallery-card__media"><img src="${images[0]}" data-review-bucket="${bucketId}" data-image-index="0" alt="${item.name} review photo" /></div>`;
       } else if (images.length > 1) {
+        const visibleImages = images.slice(0, 4);
+        const hiddenCount = images.length - visibleImages.length;
         mediaHtml = `
           <div class="customer-gallery-card__media-grid">
-            ${images.map((src, index) => `<img src="${src}" alt="${item.name} review photo ${index + 1}" />`).join('')}
+            ${visibleImages
+              .map((src, index) => {
+                const showOverlay = hiddenCount > 0 && index === visibleImages.length - 1;
+                const overlay = showOverlay
+                  ? `<span class="customer-gallery-card__media-more">+${hiddenCount}</span>`
+                  : '';
+                return `<div class="customer-gallery-card__media-item"><img src="${src}" data-review-bucket="${bucketId}" data-image-index="${index}" alt="${item.name} review photo ${index + 1}" />${overlay}</div>`;
+              })
+              .join('')}
           </div>
         `;
       }
@@ -379,6 +488,24 @@ function renderCustomerGallery(reviews) {
       `;
     })
     .join('');
+
+  if (gallery.dataset.lightboxBound !== '1') {
+    gallery.addEventListener('click', event => {
+      const target = event.target;
+      if (!(target instanceof HTMLImageElement)) return;
+
+      const bucketId = String(target.dataset.reviewBucket || '');
+      if (!bucketId) return;
+
+      const images = reviewImageBuckets.get(bucketId) || [];
+      if (!images.length) return;
+
+      const imageIndex = Number(target.dataset.imageIndex || 0);
+      openReviewLightbox(images, Number.isFinite(imageIndex) ? imageIndex : 0);
+    });
+
+    gallery.dataset.lightboxBound = '1';
+  }
 }
 
 async function loadCustomerReviews(productId) {
@@ -479,6 +606,7 @@ function initCustomerReviewForm(productId) {
   updateWishlistBadge();
   renderProduct(product);
   renderReviews(product);
+  bindReviewLightboxEvents();
   initCustomerReviewForm(window.currentProductId);
   loadCustomerReviews(window.currentProductId);
   renderMoreProducts(window.currentProductId);
