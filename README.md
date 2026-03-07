@@ -70,9 +70,30 @@ SMTP_FROM=
 WHATSAPP_ALERT_PHONE=
 WHATSAPP_ALERT_APIKEY=
 
+WHATSAPP_CLOUD_TOKEN=
+WHATSAPP_CLOUD_PHONE_NUMBER_ID=
+WHATSAPP_CLOUD_TEMPLATE_NAME=order_confirmation
+WHATSAPP_CLOUD_TEMPLATE_LANG=en_US
+
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_WHATSAPP_FROM=whatsapp:+14155238886
+
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
 ```
+
+## Customer WhatsApp Confirmation (Twilio - Simpler)
+
+To send confirmation messages to customer WhatsApp after order placement:
+
+1. Create Twilio account and open WhatsApp Sandbox.
+2. Copy `Account SID` and `Auth Token`.
+3. Use sandbox sender number as `TWILIO_WHATSAPP_FROM` (usually `whatsapp:+14155238886`).
+4. Add `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM` in Railway variables.
+5. Deploy and place a test order using a WhatsApp number joined to your sandbox.
+
+Order response will include `customerWhatsappSent` status.
 
 ## WhatsApp Order Alerts (Recommended)
 

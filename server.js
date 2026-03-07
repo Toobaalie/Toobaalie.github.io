@@ -26,6 +26,24 @@ const CORS_ALLOWED_ORIGINS = String(process.env.CORS_ALLOWED_ORIGINS || '').trim
 const WHATSAPP_ALERT_PHONE = String(process.env.WHATSAPP_ALERT_PHONE || '').trim();
 const WHATSAPP_ALERT_APIKEY = String(process.env.WHATSAPP_ALERT_APIKEY || '').trim();
 const WHATSAPP_NOTIFICATIONS_ENABLED = Boolean(WHATSAPP_ALERT_PHONE && WHATSAPP_ALERT_APIKEY);
+const WHATSAPP_CLOUD_TOKEN = String(process.env.WHATSAPP_CLOUD_TOKEN || '').trim();
+const WHATSAPP_CLOUD_PHONE_NUMBER_ID = String(process.env.WHATSAPP_CLOUD_PHONE_NUMBER_ID || '').trim();
+const WHATSAPP_CLOUD_TEMPLATE_NAME = String(process.env.WHATSAPP_CLOUD_TEMPLATE_NAME || 'order_confirmation').trim();
+const WHATSAPP_CLOUD_TEMPLATE_LANG = String(process.env.WHATSAPP_CLOUD_TEMPLATE_LANG || 'en_US').trim();
+const WHATSAPP_CUSTOMER_CONFIRMATION_ENABLED = Boolean(
+  WHATSAPP_CLOUD_TOKEN &&
+  WHATSAPP_CLOUD_PHONE_NUMBER_ID &&
+  WHATSAPP_CLOUD_TEMPLATE_NAME &&
+  WHATSAPP_CLOUD_TEMPLATE_LANG
+);
+const TWILIO_ACCOUNT_SID = String(process.env.TWILIO_ACCOUNT_SID || '').trim();
+const TWILIO_AUTH_TOKEN = String(process.env.TWILIO_AUTH_TOKEN || '').trim();
+const TWILIO_WHATSAPP_FROM = String(process.env.TWILIO_WHATSAPP_FROM || 'whatsapp:+14155238886').trim();
+const TWILIO_CUSTOMER_CONFIRMATION_ENABLED = Boolean(
+  TWILIO_ACCOUNT_SID &&
+  TWILIO_AUTH_TOKEN &&
+  TWILIO_WHATSAPP_FROM
+);
 const TELEGRAM_BOT_TOKEN = String(process.env.TELEGRAM_BOT_TOKEN || '').trim();
 const TELEGRAM_CHAT_ID = String(process.env.TELEGRAM_CHAT_ID || '').trim();
 const TELEGRAM_NOTIFICATIONS_ENABLED = Boolean(TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID);
@@ -381,6 +399,108 @@ function buildOrderAlertMessage(order) {
     itemLines ? `Items:\n${itemLines}` : 'Items: -',
     `Placed: ${new Date(order.createdAt).toLocaleString('en-PK')}`
   ].join('\n');
+}
+
+function normalizePhoneForWhatsapp(rawPhone) {
+  const input = String(rawPhone || '').trim();
+  const digits = input.replace(/\D/g, '');
+  if (!digits) return '';
+
+  // Pakistan-friendly normalization.
+  if (digits.startsWith('92')) return `+${digits}`;
+  if (digits.startsWith('03') && digits.length === 11) return `+92${digits.slice(1)}`;
+  if (digits.startsWith('3') && digits.length === 10) return `+92${digits}`;
+
+  // Generic fallback to E.164-ish.
+  return input.startsWith('+') ? input : `+${digits}`;
+}
+
+function sendTwilioWhatsappMessage({ toPhone, body }) {
+  if (!TWILIO_CUSTOMER_CONFIRMATION_ENABLED) {
+    return Promise.resolve({ sent: false, reason: 'not_configured' });
+  }
+
+  const normalized = normalizePhoneForWhatsapp(toPhone);
+  if (!normalized) {
+    return Promise.resolve({ sent: false, reason: 'invalid_phone' });
+  }
+
+  return new Promise(resolve => {
+    const payload = new URLSearchParams({
+      From: TWILIO_WHATSAPP_FROM,
+      To: `whatsapp:${normalized}`,
+      Body: String(body || '').slice(0, 1500)
+    }).toString();
+
+    const auth = Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString('base64');
+
+    const request = https.request({
+      method: 'POST',
+      hostname: 'api.twilio.com',
+      path: `/2010-04-01/Accounts/${encodeURIComponent(TWILIO_ACCOUNT_SID)}/Messages.json`,
+      headers: {
+        'Authorization': `Basic ${auth}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': Buffer.byteLength(payload)
+      },
+      timeout: 5000
+    }, response => {
+      let raw = '';
+      response.on('data', chunk => {
+        raw += chunk;
+      });
+      response.on('end', () => {
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          resolve({ sent: true });
+          return;
+        }
+
+        let reason = `http_${response.statusCode}`;
+        try {
+          const parsed = JSON.parse(raw || '{}');
+          reason = parsed.message || parsed.code || reason;
+        } catch {
+          // Keep fallback reason when parsing fails.
+        }
+        resolve({ sent: false, reason });
+      });
+    });
+
+    request.on('timeout', () => {
+      request.destroy();
+      resolve({ sent: false, reason: 'timeout' });
+    });
+
+    request.on('error', () => {
+      resolve({ sent: false, reason: 'request_failed' });
+    });
+
+    request.write(payload);
+    request.end();
+  });
+}
+
+async function notifyCustomerOrderConfirmation(order) {
+  if (!TWILIO_CUSTOMER_CONFIRMATION_ENABLED) {
+    return { sent: false, reason: 'disabled', provider: 'twilio' };
+  }
+
+  const body = [
+    `Hi ${order.fullName}, your order is confirmed.`,
+    `Order ID: ${order.id}`,
+    `Total: Pkr ${Number(order.total || 0).toFixed(0)}`,
+    'Thank you for shopping with BerryBabes.'
+  ].join('\n');
+
+  const result = await sendTwilioWhatsappMessage({
+    toPhone: order.phone,
+    body
+  });
+
+  return {
+    ...result,
+    provider: 'twilio'
+  };
 }
 
 function sendWhatsappMessage(text) {
@@ -767,7 +887,10 @@ app.post('/api/orders', orderLimiter, async (req, res) => {
     const storageBackend = await getOrdersStorageBackend();
 
     // Alerting should never block order creation.
-    const alertResult = await notifyNewOrder(order);
+    const [alertResult, customerWhatsappResult] = await Promise.all([
+      notifyNewOrder(order),
+      notifyCustomerOrderConfirmation(order)
+    ]);
 
     let emailSent = false;
     let emailStatus = 'disabled';
@@ -802,6 +925,8 @@ app.post('/api/orders', orderLimiter, async (req, res) => {
       emailStatus,
       whatsappAlert: alertResult.whatsapp ? alertResult.whatsapp.sent : false,
       telegramAlert: alertResult.telegram ? alertResult.telegram.sent : false,
+      customerWhatsappSent: customerWhatsappResult.sent,
+      customerWhatsappProvider: customerWhatsappResult.provider,
       storageBackend
     });
   } catch (error) {
@@ -962,6 +1087,12 @@ app.listen(PORT, HOST, () => {
   }
   if (!WHATSAPP_NOTIFICATIONS_ENABLED) {
     console.log('WhatsApp alerts disabled: set WHATSAPP_ALERT_PHONE and WHATSAPP_ALERT_APIKEY in .env');
+  }
+  if (!WHATSAPP_CUSTOMER_CONFIRMATION_ENABLED) {
+    console.log('Customer WhatsApp confirmation disabled: set WHATSAPP_CLOUD_TOKEN, WHATSAPP_CLOUD_PHONE_NUMBER_ID, WHATSAPP_CLOUD_TEMPLATE_NAME, WHATSAPP_CLOUD_TEMPLATE_LANG in .env');
+  }
+  if (!TWILIO_CUSTOMER_CONFIRMATION_ENABLED) {
+    console.log('Twilio customer confirmation disabled: set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM in .env');
   }
   if (!TELEGRAM_NOTIFICATIONS_ENABLED) {
     console.log('Telegram alerts disabled: set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in .env');
