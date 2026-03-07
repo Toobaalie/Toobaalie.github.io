@@ -14,7 +14,7 @@
 </head>
 <body>
   <div class="announcement-bar">
-    Admin Dashboard &mdash; Orders &amp; Subscribers
+    Admin Dashboard &mdash; Products, Orders &amp; Subscribers
   </div>
 
   <header class="header product-header" id="header">
@@ -37,8 +37,34 @@
     <div class="container">
       <div class="section__header">
         <span class="section__tag">Store Admin</span>
-        <h1 class="section__title">Orders &amp; Subscribers</h1>
+        <h1 class="section__title">Products, Orders &amp; Subscribers</h1>
       </div>
+
+      <section class="section__header admin-subscribers-header">
+        <h2 class="section__title">Product Manager</h2>
+      </section>
+
+      <section class="checkout-form-card admin-product-form-card">
+        <h2>Add / Update Product</h2>
+        <form id="productForm" class="checkout-form" novalidate>
+          <div class="form-row">
+            <input type="text" id="productName" placeholder="Product Name" required minlength="2" />
+            <input type="text" id="productCategory" placeholder="Category (Silk, Plain, etc.)" required minlength="2" />
+          </div>
+          <div class="form-row">
+            <input type="number" id="productPrice" placeholder="Price (PKR)" min="1" required />
+            <input type="text" id="productImage" placeholder="Main Image Path (e.g. images/my-product.jpeg)" required />
+          </div>
+          <textarea id="productDescription" rows="3" placeholder="Product Description" required minlength="10"></textarea>
+          <textarea id="productColors" rows="2" placeholder="Colors (comma separated, e.g. Red, Blue, Black)" required></textarea>
+          <textarea id="productGallery" rows="2" placeholder="Gallery image paths (comma separated, optional)"></textarea>
+          <button type="submit" class="btn btn--primary">
+            <i class="fas fa-plus-circle"></i> Save Product
+          </button>
+        </form>
+      </section>
+
+      <section id="adminProducts" class="admin-orders"></section>
 
       <section class="admin-toolbar">
         <button id="refreshAdmin" class="btn btn--primary" type="button">Refresh</button>

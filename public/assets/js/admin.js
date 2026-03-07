@@ -148,6 +148,28 @@ function reviewCard(review) {
   `;
 }
 
+function productCard([id, product]) {
+  const colors = Array.isArray(product.colors) ? product.colors.join(', ') : '-';
+  return `
+    <article class="admin-order-card" data-product-id="${escapeHtml(id)}">
+      <div class="admin-order-card__top">
+        <h3>${escapeHtml(product.name || id)}</h3>
+        <span>${escapeHtml(id)}</span>
+      </div>
+      <div class="admin-order-card__grid">
+        <p><strong>Category:</strong> ${escapeHtml(product.category || '-')}</p>
+        <p><strong>Price:</strong> ${money(product.price || 0)}</p>
+        <p><strong>Colors:</strong> ${escapeHtml(colors)}</p>
+      </div>
+      <p><strong>Image:</strong> ${escapeHtml(product.image || '-')}</p>
+      <p>${escapeHtml(product.description || '')}</p>
+      <div class="admin-review-actions">
+        <button type="button" class="admin-review-btn" data-product-action="delete">Delete Product</button>
+      </div>
+    </article>
+  `;
+}
+
 function renderOrders(orders) {
   const container = document.getElementById('adminOrders');
   if (!container) return;
@@ -197,6 +219,24 @@ function renderReviews(reviews) {
   }
 
   container.innerHTML = reviews.map(reviewCard).join('');
+}
+
+function renderProducts(products) {
+  const container = document.getElementById('adminProducts');
+  if (!container) return;
+
+  const entries = Object.entries(products || {});
+  if (!entries.length) {
+    container.innerHTML = `
+      <div class="cart-empty">
+        <h2>No products yet</h2>
+        <p>Add your first product using the form above.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = entries.map(productCard).join('');
 }
 
 function toCsv(rows) {
@@ -263,27 +303,71 @@ function subscribersToCsvRows(subscribers) {
 }
 
 async function loadAdminData() {
-  const [ordersResponse, subscribersResponse, reviewsResponse] = await Promise.all([
+  const [productsResponse, ordersResponse, subscribersResponse, reviewsResponse] = await Promise.all([
+    adminFetch('/api/admin/products'),
     adminFetch('/api/orders'),
     adminFetch('/api/subscribers'),
     adminFetch('/api/reviews?includeAll=1')
   ]);
 
-  if (!ordersResponse.ok || !subscribersResponse.ok || !reviewsResponse.ok) {
+  if (!productsResponse.ok || !ordersResponse.ok || !subscribersResponse.ok || !reviewsResponse.ok) {
     throw new Error('Unable to load admin data');
   }
 
+  const productsPayload = await productsResponse.json();
   const ordersPayload = await ordersResponse.json();
   const subscribersPayload = await subscribersResponse.json();
   const reviewsPayload = await reviewsResponse.json();
+  const products = productsPayload.products || {};
   const orders = ordersPayload.orders || [];
   const subscribers = subscribersPayload.subscribers || [];
   const reviews = reviewsPayload.reviews || [];
 
+  renderProducts(products);
   renderOrders(orders);
   renderSubscribers(subscribers);
   renderReviews(reviews);
-  return { orders, subscribers, reviews };
+  return { products, orders, subscribers, reviews };
+}
+
+async function saveProductFromForm(form) {
+  const payload = {
+    name: document.getElementById('productName').value.trim(),
+    category: document.getElementById('productCategory').value.trim(),
+    price: Number(document.getElementById('productPrice').value || 0),
+    image: document.getElementById('productImage').value.trim(),
+    description: document.getElementById('productDescription').value.trim(),
+    colors: document.getElementById('productColors').value,
+    galleryImages: document.getElementById('productGallery').value
+  };
+
+  const response = await adminFetch('/api/admin/products', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body.error || 'Unable to save product');
+  }
+
+  form.reset();
+}
+
+async function deleteProduct(productId) {
+  const confirmed = window.confirm('Delete this product? This cannot be undone.');
+  if (!confirmed) return false;
+
+  const response = await adminFetch(`/api/admin/products/${encodeURIComponent(productId)}`, {
+    method: 'DELETE'
+  });
+
+  if (!response.ok) {
+    throw new Error('Unable to delete product');
+  }
+
+  return true;
 }
 
 async function moderateReview(reviewId, approved) {
@@ -313,12 +397,46 @@ async function clearCollection(endpoint, label) {
 }
 
 function setupActions(getState, refreshData) {
+  const productForm = document.getElementById('productForm');
+  const productsContainer = document.getElementById('adminProducts');
   const refreshButton = document.getElementById('refreshAdmin');
   const exportOrdersButton = document.getElementById('exportOrders');
   const exportSubscribersButton = document.getElementById('exportSubscribers');
   const clearOrdersButton = document.getElementById('clearOrders');
   const clearSubscribersButton = document.getElementById('clearSubscribers');
   const reviewsContainer = document.getElementById('adminReviews');
+
+  if (productForm) {
+    productForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      try {
+        await saveProductFromForm(productForm);
+        await refreshData();
+        setStatus('Product saved successfully.');
+      } catch (error) {
+        setStatus(error.message || 'Unable to save product.', true);
+      }
+    });
+  }
+
+  if (productsContainer) {
+    productsContainer.addEventListener('click', async event => {
+      const button = event.target.closest('[data-product-action="delete"]');
+      if (!button) return;
+
+      const card = button.closest('[data-product-id]');
+      if (!card) return;
+
+      try {
+        const deleted = await deleteProduct(card.dataset.productId);
+        if (!deleted) return;
+        await refreshData();
+        setStatus('Product deleted.');
+      } catch (error) {
+        setStatus(error.message || 'Unable to delete product.', true);
+      }
+    });
+  }
 
   if (refreshButton) {
     refreshButton.addEventListener('click', async () => {
@@ -398,6 +516,7 @@ function setupActions(getState, refreshData) {
 
 (function initAdminOrders() {
   const state = {
+    products: {},
     orders: [],
     subscribers: [],
     reviews: []
@@ -405,6 +524,7 @@ function setupActions(getState, refreshData) {
 
   async function refreshData() {
     const data = await loadAdminData();
+    state.products = data.products;
     state.orders = data.orders;
     state.subscribers = data.subscribers;
     state.reviews = data.reviews;
@@ -413,9 +533,19 @@ function setupActions(getState, refreshData) {
   setupActions(() => state, refreshData);
 
   refreshData().catch(error => {
+    const productsContainer = document.getElementById('adminProducts');
     const ordersContainer = document.getElementById('adminOrders');
     const subscribersContainer = document.getElementById('adminSubscribers');
     const reviewsContainer = document.getElementById('adminReviews');
+
+    if (productsContainer) {
+      productsContainer.innerHTML = `
+        <div class="cart-empty">
+          <h2>Unable to load products</h2>
+          <p>Check server status and admin key.</p>
+        </div>
+      `;
+    }
 
     if (ordersContainer) {
       ordersContainer.innerHTML = `

@@ -17,6 +17,7 @@ const IMAGES_DIR = path.join(PUBLIC_DIR, 'images');
 const ORDERS_PATH = path.join(ROOT_DIR, 'data', 'orders.json');
 const SUBSCRIBERS_PATH = path.join(ROOT_DIR, 'data', 'subscribers.json');
 const CUSTOMER_REVIEWS_PATH = path.join(ROOT_DIR, 'data', 'customer-reviews.json');
+const PRODUCTS_PATH = path.join(ROOT_DIR, 'data', 'products.json');
 const SMTP_FROM = process.env.SMTP_FROM || process.env.SMTP_USER || '';
 const SMTP_FROM_NAME = process.env.SMTP_FROM_NAME || 'BerryBabes Orders';
 const EMAIL_NOTIFICATIONS_ENABLED = false;
@@ -268,6 +269,28 @@ function ensureCustomerReviewsFile() {
   }
 }
 
+function ensureProductsFile() {
+  const dir = path.dirname(PRODUCTS_PATH);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  if (!fs.existsSync(PRODUCTS_PATH)) {
+    fs.writeFileSync(PRODUCTS_PATH, '{}', 'utf8');
+  }
+}
+
+function readProducts() {
+  ensureProductsFile();
+  const raw = fs.readFileSync(PRODUCTS_PATH, 'utf8');
+  const parsed = JSON.parse(raw || '{}');
+  return (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : {};
+}
+
+function writeProducts(products) {
+  ensureProductsFile();
+  fs.writeFileSync(PRODUCTS_PATH, JSON.stringify(products, null, 2), 'utf8');
+}
+
 function readOrders() {
   ensureOrdersFile();
   const raw = fs.readFileSync(ORDERS_PATH, 'utf8');
@@ -493,10 +516,25 @@ function isValidImageDataUrl(value) {
 
 app.use(express.json({ limit: '5mb' }));
 app.use('/images', express.static(IMAGES_DIR));
+
+app.get('/assets/js/products-data.js', (_req, res) => {
+  const products = readProducts();
+  res.type('application/javascript');
+  return res.send(`window.BerryBabesProducts = ${JSON.stringify(products, null, 2)};\n`);
+});
+
 app.use(express.static(PUBLIC_DIR));
 
 app.get('/', (_req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
+});
+
+app.get('/api/products', (_req, res) => {
+  try {
+    return res.json({ products: readProducts() });
+  } catch (error) {
+    return res.status(500).json({ error: 'Unable to read products' });
+  }
 });
 
 app.post('/api/subscribe', subscribeLimiter, async (req, res) => {
@@ -534,6 +572,127 @@ app.post('/api/subscribe', subscribeLimiter, async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ error: 'Unable to save subscription' });
+  }
+});
+
+function normalizeProductId(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function normalizeProductPayload(payload) {
+  const name = String(payload.name || '').trim();
+  const category = String(payload.category || '').trim();
+  const description = String(payload.description || '').trim();
+  const image = String(payload.image || '').trim();
+  const price = Number(payload.price || 0);
+
+  const rawColors = Array.isArray(payload.colors)
+    ? payload.colors
+    : String(payload.colors || '').split(',');
+  const colors = rawColors
+    .map(color => String(color || '').trim())
+    .filter(Boolean);
+
+  const rawGallery = Array.isArray(payload.galleryImages)
+    ? payload.galleryImages
+    : String(payload.galleryImages || '').split(',');
+  const galleryImages = rawGallery
+    .map(imagePath => String(imagePath || '').trim())
+    .filter(Boolean);
+
+  const colorImages = {};
+  colors.forEach(color => {
+    colorImages[color] = image;
+  });
+
+  const id = normalizeProductId(payload.id || name);
+
+  return {
+    id,
+    product: {
+      name,
+      category,
+      price,
+      image,
+      description,
+      colors,
+      colorImages,
+      galleryImages,
+      reviews: []
+    }
+  };
+}
+
+app.get('/api/admin/products', requireAdminAuth, (_req, res) => {
+  try {
+    return res.json({ products: readProducts() });
+  } catch (error) {
+    return res.status(500).json({ error: 'Unable to read products' });
+  }
+});
+
+app.post('/api/admin/products', requireAdminAuth, (req, res) => {
+  try {
+    const normalized = normalizeProductPayload(req.body || {});
+    const { id, product } = normalized;
+
+    if (!id) {
+      return res.status(400).json({ error: 'Product id/name is required' });
+    }
+
+    if (product.name.length < 2 || product.category.length < 2 || product.description.length < 10) {
+      return res.status(400).json({ error: 'Name, category, and description are required' });
+    }
+
+    if (!Number.isFinite(product.price) || product.price <= 0) {
+      return res.status(400).json({ error: 'Price must be greater than 0' });
+    }
+
+    if (!product.image) {
+      return res.status(400).json({ error: 'Main image path is required' });
+    }
+
+    if (!product.colors.length) {
+      return res.status(400).json({ error: 'At least one color is required' });
+    }
+
+    const products = readProducts();
+    const existing = products[id] || {};
+    products[id] = {
+      ...product,
+      reviews: Array.isArray(existing.reviews) ? existing.reviews : []
+    };
+    writeProducts(products);
+
+    return res.status(201).json({ success: true, id, product: products[id] });
+  } catch (error) {
+    return res.status(500).json({ error: 'Unable to save product' });
+  }
+});
+
+app.delete('/api/admin/products/:id', requireAdminAuth, (req, res) => {
+  try {
+    const id = normalizeProductId((req.params || {}).id || '');
+    if (!id) {
+      return res.status(400).json({ error: 'Product id is required' });
+    }
+
+    const products = readProducts();
+    if (!products[id]) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    delete products[id];
+    writeProducts(products);
+    return res.json({ success: true, id });
+  } catch (error) {
+    return res.status(500).json({ error: 'Unable to delete product' });
   }
 });
 
@@ -796,6 +955,7 @@ app.listen(PORT, HOST, () => {
   ensureOrdersFile();
   ensureSubscribersFile();
   ensureCustomerReviewsFile();
+  ensureProductsFile();
   console.log('Order storage mode: local JSON file (data/orders.json).');
   if (!smtpConfigured) {
     console.log('Email service disabled: set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM in .env');

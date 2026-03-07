@@ -1400,6 +1400,14 @@ h1, h2, h3, h4, h5 { font-family: var(--font-serif); line-height: 1.2; }
   margin-bottom: 0.75rem;
 }
 
+.admin-product-form-card {
+  margin-bottom: 1rem;
+}
+
+.admin-product-form-card .checkout-form {
+  gap: 0.7rem;
+}
+
 .admin-toolbar .btn {
   padding: 0.7rem 1.1rem;
   font-size: 0.65rem;

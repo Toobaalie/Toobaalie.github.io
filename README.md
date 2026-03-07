@@ -32,6 +32,7 @@ Modern scrunchie store with static frontend pages and an Express API backend.
 |   |-- sitemap.xml
 |   `-- CNAME
 |-- data/
+|   |-- products.json
 |   |-- orders.json
 |   |-- subscribers.json
 |   `-- customer-reviews.json
@@ -132,6 +133,17 @@ To use admin panel after this update:
 1. Set `ADMIN_API_KEY` in Railway variables.
 2. Redeploy.
 3. Open `/admin.html` and enter the same key when prompted.
+
+## Add Products From Admin
+
+You can now add/update/delete products from `https://berrybabes.me/admin.html`.
+
+1. Open admin page.
+2. Enter your `ADMIN_API_KEY` when prompted.
+3. Fill Product Manager form and click `Save Product`.
+4. Product appears on the homepage and product pages after refresh.
+
+Catalog data is stored in `data/products.json`.
 
 ## Important Note About `data/*.json`
 
