@@ -27,6 +27,9 @@ body {
   background: #fff;
   -webkit-font-smoothing: antialiased;
   line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 img { display: block; width: 100%; object-fit: cover; }
@@ -1794,6 +1797,7 @@ h1, h2, h3, h4, h5 { font-family: var(--font-serif); line-height: 1.2; }
 
 /* ========== FOOTER ========== */
 .footer {
+  margin-top: auto;
   background: var(--charcoal);
   color: #fff;
   padding: 5rem 0 0;
