@@ -261,6 +261,20 @@ async function placeOrder(event) {
     createdAt: new Date().toISOString()
   };
 
+  const requiredFields = [
+    ['fullName', order.fullName],
+    ['phone', order.phone],
+    ['address', order.address],
+    ['state', order.state],
+    ['city', order.city],
+    ['postalCode', order.postalCode]
+  ];
+  const missing = requiredFields.filter(([, value]) => !String(value || '').trim()).map(([key]) => key);
+  if (missing.length) {
+    showToast(`Please fill required fields: ${missing.join(', ')}`);
+    return;
+  }
+
   const apiBase = resolveApiBase();
   const submitButton = document.getElementById('placeOrderBtn');
   if (submitButton) submitButton.disabled = true;
@@ -311,7 +325,7 @@ async function placeOrder(event) {
 
     throw lastError || new Error('Could not place order. Please try again.');
   } catch (error) {
-    showToast(`Could not place order: ${error.message || 'Please try again.'}`);
+    showToast(`Could not place order: ${error.message || 'Network or server issue. Please try again.'}`);
   } finally {
     if (submitButton) submitButton.disabled = false;
   }

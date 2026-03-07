@@ -14,13 +14,14 @@ const IMAGES_DIR = path.join(PUBLIC_DIR, 'images');
 const ORDERS_PATH = path.join(ROOT_DIR, 'data', 'orders.json');
 const SUBSCRIBERS_PATH = path.join(ROOT_DIR, 'data', 'subscribers.json');
 const CUSTOMER_REVIEWS_PATH = path.join(ROOT_DIR, 'data', 'customer-reviews.json');
+const SMTP_FROM = process.env.SMTP_FROM || process.env.SMTP_USER || '';
+const SMTP_FROM_NAME = process.env.SMTP_FROM_NAME || 'BerryBabes Orders';
 
 const smtpConfigured =
   Boolean(process.env.SMTP_HOST) &&
   Boolean(process.env.SMTP_PORT) &&
   Boolean(process.env.SMTP_USER) &&
-  Boolean(process.env.SMTP_PASS) &&
-  Boolean(process.env.SMTP_FROM);
+  Boolean(process.env.SMTP_PASS);
 
 const mailTransporter = smtpConfigured
   ? nodemailer.createTransport({
@@ -137,7 +138,7 @@ async function sendEmail({ to, subject, html }) {
   }
 
   await mailTransporter.sendMail({
-    from: process.env.SMTP_FROM,
+    from: `${SMTP_FROM_NAME} <${SMTP_FROM}>`,
     to,
     subject,
     html
@@ -259,7 +260,10 @@ app.post('/api/orders', async (req, res) => {
           <h4>Items:</h4>
           <ul>${orderItemsHtml}</ul>
         `
-      }).catch(() => ({ sent: false, reason: 'send_failed' }));
+      }).catch(error => {
+        console.error('Order email send failed:', error.message || error);
+        return { sent: false, reason: 'send_failed' };
+      });
 
       emailSent = emailResult.sent;
       emailStatus = emailResult.sent ? 'sent' : (emailResult.reason || 'send_failed');
@@ -267,7 +271,8 @@ app.post('/api/orders', async (req, res) => {
 
     return res.status(201).json({ success: true, orderId: order.id, emailSent, emailStatus });
   } catch (error) {
-    return res.status(500).json({ error: 'Unable to save order' });
+    console.error('Order API failed:', error.message || error);
+    return res.status(500).json({ error: 'Unable to save order. Please try again in a moment.' });
   }
 });
 

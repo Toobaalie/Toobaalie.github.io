@@ -1,24 +1,2 @@
 [
-  {
-    "id": "ORD-1772749962822",
-    "fullName": "Sarim Ali",
-    "phone": "03133219752",
-    "email": "sarimsarimali083@gmail.com",
-    "address": "Street no 2 house no 26 near dho office Sohail town mpk",
-    "city": "Mirpurkhas",
-    "postalCode": "69000",
-    "notes": "",
-    "items": [
-      {
-        "id": "silk-scrunchie",
-        "name": "Silk Scrunchie",
-        "price": 150,
-        "color": "Default",
-        "image": "",
-        "quantity": 1
-      }
-    ],
-    "total": 150,
-    "createdAt": "2026-03-05T22:32:42.822Z"
-  }
 ]
