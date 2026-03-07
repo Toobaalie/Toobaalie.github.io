@@ -176,7 +176,7 @@ function showToast(message) {
 async function handleNewsletter(e) {
   e.preventDefault();
   const form = e.target;
-  const input = form.querySelector('input[type="email"]');
+  const input = form.querySelector('input[type="email"]') || form.querySelector('input');
   const email = input ? input.value.trim() : '';
 
   if (!email) {
@@ -214,6 +214,11 @@ async function handleNewsletter(e) {
         } else {
           showToast('Subscribed successfully!');
         }
+        try {
+          window.alert('Subscribed successfully.');
+        } catch {
+          // Ignore blocked alerts.
+        }
         form.reset();
         return;
       } catch (error) {
@@ -223,11 +228,26 @@ async function handleNewsletter(e) {
 
     throw lastError || new Error('Subscription failed');
   } catch (error) {
-    showToast(`Could not subscribe: ${error.message || 'Please try again.'}`);
+    const message = `Could not subscribe: ${error.message || 'Please try again.'}`;
+    showToast(message);
+    try {
+      window.alert(message);
+    } catch {
+      // Ignore blocked alerts.
+    }
   } finally {
     if (submitBtn) submitBtn.disabled = false;
   }
 }
+
+window.handleNewsletter = handleNewsletter;
+
+document.addEventListener('DOMContentLoaded', () => {
+  const newsletterForm = document.querySelector('.newsletter__form');
+  if (!newsletterForm || newsletterForm.dataset.bound === '1') return;
+  newsletterForm.addEventListener('submit', handleNewsletter);
+  newsletterForm.dataset.bound = '1';
+});
 
 // ─── Contact Form ─────────────────────────────────────────────
 function handleContact(e) {
