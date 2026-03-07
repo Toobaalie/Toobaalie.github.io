@@ -55,6 +55,20 @@ function showToast(message) {
   setTimeout(() => toast.classList.remove('show'), 2500);
 }
 
+function getCartItemsSafe() {
+  if (window.CartStore && typeof window.CartStore.getCart === 'function') {
+    return window.CartStore.getCart();
+  }
+
+  try {
+    const raw = localStorage.getItem('berrybabes_cart');
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 function updateCartBadge() {
   const badge = document.getElementById('cartBadge');
   if (!badge || !window.CartStore) return;
@@ -76,9 +90,9 @@ function updateWishlistBadge() {
 
 function renderSummary() {
   const summary = document.getElementById('checkoutSummary');
-  if (!summary || !window.CartStore) return;
+  if (!summary) return;
 
-  const items = window.CartStore.getCart();
+  const items = getCartItemsSafe();
 
   if (!items.length) {
     summary.innerHTML = `
@@ -236,10 +250,9 @@ function initCityAutocomplete() {
 
 async function placeOrder(event) {
   event.preventDefault();
-  if (!window.CartStore) return;
 
   const form = event.target;
-  const cartItems = window.CartStore.getCart();
+  const cartItems = getCartItemsSafe();
 
   if (!cartItems.length) {
     showToast('Your cart is empty');
@@ -279,7 +292,7 @@ async function placeOrder(event) {
   const submitButton = document.getElementById('placeOrderBtn');
   if (submitButton) submitButton.disabled = true;
 
-  const candidateBases = Array.from(new Set([apiBase, 'https://berrybabes.me']));
+  const candidateBases = Array.from(new Set(['https://berrybabes.me', apiBase, '']));
   let lastError = null;
 
   try {
@@ -296,11 +309,15 @@ async function placeOrder(event) {
 
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) {
-          throw new Error(payload.error || 'Failed to place order');
+          throw new Error(payload.error || `Failed to place order (HTTP ${response.status})`);
         }
 
         localStorage.setItem('berrybabes_last_order', JSON.stringify({ ...order, orderId: payload.orderId }));
-        window.CartStore.saveCart([]);
+        if (window.CartStore && typeof window.CartStore.saveCart === 'function') {
+          window.CartStore.saveCart([]);
+        } else {
+          localStorage.setItem('berrybabes_cart', '[]');
+        }
         updateCartBadge();
         let confirmationMessage = 'Order confirmed. We will contact you shortly.';
         if (payload.emailStatus === 'sent' || payload.emailSent) {
