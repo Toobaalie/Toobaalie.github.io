@@ -269,36 +269,19 @@ async function placeOrder(event) {
   }
 
   const order = {
-    fullName: document.getElementById('fullName').value.trim(),
-    phone: document.getElementById('phone').value.trim(),
+    fullName: document.getElementById('fullName').value.trim() || 'Customer',
+    phone: document.getElementById('phone').value.trim() || 'Not provided',
     email: document.getElementById('email').value.trim(),
-    address: document.getElementById('address').value.trim(),
-    state: document.getElementById('state').value.trim(),
-    city: document.getElementById('city').value.trim(),
-    postalCode: document.getElementById('postalCode').value.trim(),
+    address: document.getElementById('address').value.trim() || 'Not provided',
+    state: document.getElementById('state').value.trim() || 'Not provided',
+    city: document.getElementById('city').value.trim() || 'Not provided',
+    postalCode: document.getElementById('postalCode').value.trim() || 'Not provided',
       paymentMethod: 'cod',
     notes: document.getElementById('notes').value.trim(),
     items: cartItems,
     total: cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
     createdAt: new Date().toISOString()
   };
-
-  const requiredFields = [
-    ['fullName', order.fullName],
-    ['phone', order.phone],
-    ['address', order.address]
-  ];
-  const missing = requiredFields.filter(([, value]) => !String(value || '').trim()).map(([key]) => key);
-  if (missing.length) {
-    const firstMissingId = missing[0];
-    const firstMissingField = document.getElementById(firstMissingId);
-    if (firstMissingField) {
-      firstMissingField.focus();
-      firstMissingField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-    showBlockingMessage(`Please fill required fields: ${missing.join(', ')}`);
-    return;
-  }
 
   const apiBase = resolveApiBase();
   const submitButton = document.getElementById('placeOrderBtn');

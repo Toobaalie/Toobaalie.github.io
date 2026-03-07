@@ -59,13 +59,13 @@
           <h2>Shipping Address</h2>
           <form id="checkoutForm" class="checkout-form" novalidate onsubmit="placeOrder(event)">
             <div class="form-row">
-              <input type="text" id="fullName" placeholder="Full Name" required />
-              <input type="tel" id="phone" placeholder="Phone Number" required />
+              <input type="text" id="fullName" placeholder="Full Name" />
+              <input type="tel" id="phone" placeholder="Phone Number" />
             </div>
             <input type="text" id="email" placeholder="Email Address (optional)" inputmode="email" />
-            <textarea id="address" rows="4" placeholder="Street Address" required></textarea>
+            <textarea id="address" rows="4" placeholder="Street Address"></textarea>
             <div class="form-row">
-              <select id="state" required>
+              <select id="state">
                 <option value="" disabled selected>Select State / Region</option>
                 <option value="Punjab">Punjab</option>
                 <option value="Sindh">Sindh</option>
@@ -76,10 +76,10 @@
             </div>
             <div class="form-row">
               <div class="checkout-field checkout-city-field">
-                <input type="text" id="city" placeholder="Select state first" autocomplete="off" required disabled />
+                <input type="text" id="city" placeholder="Select state first" autocomplete="off" disabled />
                 <div class="city-suggestions" id="citySuggestions" role="listbox" aria-label="City suggestions"></div>
               </div>
-              <input type="text" id="postalCode" placeholder="Postal Code" required />
+              <input type="text" id="postalCode" placeholder="Postal Code" />
             </div>
             <textarea id="notes" rows="3" placeholder="Order notes (optional)"></textarea>
 
