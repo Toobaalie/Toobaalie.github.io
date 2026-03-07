@@ -263,7 +263,7 @@ function handleQuiz(e) {
     'silk-scrunchie': { name: 'Golden Pearl Silk', note: 'Elegant silk tones grouped in one product set.' },
     'pearl-collection': { name: 'Pearl Collection', note: 'Multiple pearl shades grouped in one card.' },
     'cotton-classic': { name: 'Printed Fabric Set', note: 'All printed variants are available in one product.' },
-    'satin-dream': { name: 'Skin Satin Set', note: 'Same style plain and studio views in one listing.' },
+    'satin-dream': { name: 'Skin Satin Set', note: 'Soft satin texture with a clean, classic finish.' },
     'silk-bundle': { name: 'Black Silk Scrunchie', note: 'Sleek black silk style that pairs with every look.' }
   };
 

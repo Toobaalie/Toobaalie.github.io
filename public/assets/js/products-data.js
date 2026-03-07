@@ -59,9 +59,9 @@ window.BerryBabesProducts = {
     price: 150,
     image: 'images/silk 4.jpeg',
     description: 'Glossy satin-silk feel with gentle hold and a polished look.',
-    colors: ['Skin Satin Plain', 'Skin Satin Studio'],
+    colors: ['Skin Satin'],
     colorImages: {
-      'Skin Satin Plain': 'images/skin satin mockup.jpg',
+      'Skin Satin': 'images/skin satin mockup.jpg',
     },
     reviews: [
       { name: 'Noor', rating: 5, text: 'The skin satin finish looks super clean and classy.' },
