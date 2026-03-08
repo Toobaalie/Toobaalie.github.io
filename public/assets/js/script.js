@@ -497,19 +497,21 @@ function handleQuiz(e) {
   Object.entries(allProducts).forEach(([id, product]) => {
     const category = homeCategory(product);
     const badge = badgeById[id] || '';
+    const colors = Array.isArray(product.colors) ? product.colors.filter(Boolean) : [];
+    const hasMultiColor = colors.length > 1;
 
-    // Expand printed product into separate variant cards to show more options.
-    if (id === 'cotton-classic' && Array.isArray(product.colors) && product.colors.length) {
-      product.colors.forEach(color => {
+    // Expand any multi-color product into separate variant cards.
+    if (hasMultiColor) {
+      colors.forEach(color => {
         cards.push(
           renderCard({
             id,
             category,
-            title: color,
-            displayCategory: 'Printed',
+            title: product.name,
+            displayCategory: product.category,
             price: product.price,
             image: (product.colorImages && product.colorImages[color]) || product.image,
-            badge: 'Printed',
+            badge: color,
             defaultColor: color
           })
         );
@@ -526,7 +528,7 @@ function handleQuiz(e) {
         price: product.price,
         image: product.image,
         badge,
-        defaultColor: ''
+        defaultColor: colors[0] || ''
       })
     );
   });
