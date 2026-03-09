@@ -110,6 +110,30 @@ window.BerryBabesProducts = {
 			"images/4b09add7d9792a75988407081e156d27.jpg"
 		],
 		"reviews": []
+	},
+	"pearl-trio-set": {
+		"name": "The Pearl Trio Set",
+		"category": "Bundles",
+		"price": 399,
+		"image": "images/Gemini_Generated_Image_36k87136k87136k8.png",
+		"description": "Three elegant pearl scrunchies in classic shades for effortless everyday styling.",
+		"colors": [
+			"Pearl Black",
+			"Pearl Blue",
+			"Pearl Grey"
+		],
+		"colorImages": {
+			"Pearl Black": "images/pearl black.jpeg",
+			"Pearl Blue": "images/pearl blue.jpeg",
+			"Pearl Grey": "images/pearl grey.jpeg"
+		},
+		"galleryImages": [
+			"images/Gemini_Generated_Image_36k87136k87136k8.png",
+			"images/pearl black.jpeg",
+			"images/pearl blue.jpeg",
+			"images/pearl grey.jpeg"
+		],
+		"reviews": []
 	}
 };
 

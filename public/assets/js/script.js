@@ -450,10 +450,14 @@ function handleQuiz(e) {
     'cotton-classic': 'Printed',
     'satin-dream': 'Plain',
     'silk-bundle': 'Plain',
-    'spring-bloom': 'Plain'
+    'spring-bloom': 'Plain',
+    'pearl-trio-set': 'Bundles'
   };
 
-  function homeCategory(product) {
+  function homeCategory(id, product) {
+    if (id === 'pearl-trio-set') {
+      return 'bundles';
+    }
     const normalized = (product.category || '').toLowerCase();
     if (normalized === 'printed') {
       return 'printed';
@@ -495,13 +499,14 @@ function handleQuiz(e) {
   const cards = [];
 
   Object.entries(allProducts).forEach(([id, product]) => {
-    const category = homeCategory(product);
+    const category = homeCategory(id, product);
     const badge = badgeById[id] || '';
     const colors = Array.isArray(product.colors) ? product.colors.filter(Boolean) : [];
     const hasMultiColor = colors.length > 1;
+    const shouldExpandByColor = hasMultiColor && id !== 'pearl-trio-set';
 
     // Expand any multi-color product into separate variant cards.
-    if (hasMultiColor) {
+    if (shouldExpandByColor) {
       colors.forEach(color => {
         cards.push(
           renderCard({
