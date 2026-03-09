@@ -2,6 +2,22 @@ function money(value) {
   return `Pkr ${Number(value).toFixed(0)}`;
 }
 
+const SALE_DISCOUNT_PERCENT = 15;
+const SALE_MULTIPLIER = (100 - SALE_DISCOUNT_PERCENT) / 100;
+
+function inferOriginalPrice(discountedPrice) {
+  const sale = Number(discountedPrice) || 0;
+  return Math.round(sale / SALE_MULTIPLIER);
+}
+
+function getOriginalUnitPrice(item) {
+  return Number(item.originalPrice) || inferOriginalPrice(item.price);
+}
+
+function formatPriceWithDiscount(originalPrice, discountedPrice) {
+  return `<span class="price-stack"><span class="price-sale">${money(discountedPrice)}</span><span class="price-original">${money(originalPrice)}</span></span>`;
+}
+
 const STATE_CITY_MAP = {
   Punjab: [
     'Lahore', 'Faisalabad', 'Rawalpindi', 'Multan', 'Gujranwala', 'Sialkot', 'Sargodha',
@@ -151,6 +167,7 @@ function renderSummary() {
   }
 
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const originalTotal = items.reduce((sum, item) => sum + getOriginalUnitPrice(item) * item.quantity, 0);
 
   summary.innerHTML = `
     <h3>Order Summary</h3>
@@ -164,7 +181,7 @@ function renderSummary() {
               <p class="checkout-item__name">${item.name}</p>
               <p class="checkout-item__meta">Color: ${item.color} • Qty: ${item.quantity}</p>
             </div>
-            <strong>${money(item.price * item.quantity)}</strong>
+            <strong class="checkout-item__price">${formatPriceWithDiscount(getOriginalUnitPrice(item) * item.quantity, item.price * item.quantity)}</strong>
           </div>
         `
         )
@@ -172,7 +189,7 @@ function renderSummary() {
     </div>
     <div class="checkout-total">
       <span>Total</span>
-      <strong>${money(total)}</strong>
+      <strong class="checkout-total__price">${formatPriceWithDiscount(originalTotal, total)}</strong>
     </div>
   `;
 }

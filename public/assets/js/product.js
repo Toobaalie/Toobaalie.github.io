@@ -1,4 +1,6 @@
 const products = window.BerryBabesProducts || {};
+const SALE_DISCOUNT_PERCENT = 15;
+const SALE_MULTIPLIER = (100 - SALE_DISCOUNT_PERCENT) / 100;
 
 let selectedColor = '';
 let selectedQuantity = 1;
@@ -8,6 +10,17 @@ const reviewImageBuckets = new Map();
 
 let reviewLightboxImages = [];
 let reviewLightboxIndex = 0;
+
+function getDiscountedPrice(originalPrice) {
+  const base = Number(originalPrice) || 0;
+  return Math.round(base * SALE_MULTIPLIER);
+}
+
+function formatPriceWithDiscount(originalPrice) {
+  const original = Number(originalPrice) || 0;
+  const discounted = getDiscountedPrice(original);
+  return `<span class="price-stack"><span class="price-sale">Pkr ${discounted}</span><span class="price-original">Pkr ${original}</span></span>`;
+}
 
 function getProductFromUrl() {
   const params = new URLSearchParams(window.location.search);
@@ -105,7 +118,7 @@ function setProductSeoMeta(product, productId) {
       '@type': 'Offer',
       url: canonicalUrl,
       priceCurrency: 'PKR',
-      price: String(product.price),
+      price: String(getDiscountedPrice(product.price)),
       availability: 'https://schema.org/InStock'
     }
   };
@@ -160,7 +173,7 @@ function renderProduct(product) {
     <div class="product-detail__content">
       <span class="product-card__cat">${product.category}</span>
       <h1 class="product-detail__title">${product.name}</h1>
-      <p class="product-detail__price">Pkr ${product.price}</p>
+      <p class="product-detail__price">${formatPriceWithDiscount(product.price)}</p>
       <p class="product-detail__desc">${product.description}</p>
 
       <div class="product-detail__colors">
@@ -255,18 +268,21 @@ function renderProduct(product) {
   });
 
   addButton.addEventListener('click', () => {
+    const originalPrice = Number(product.price) || 0;
+    const discountedPrice = getDiscountedPrice(originalPrice);
     if (window.CartStore) {
       window.CartStore.addItem({
         id: window.currentProductId,
         name: product.name,
-        price: product.price,
+        price: discountedPrice,
+        originalPrice,
         color: selectedColor,
         image: selectedImage,
         quantity: selectedQuantity
       });
     }
     updateCartBadge();
-    showToast(`🛍️ ${product.name} (${selectedColor}) x${selectedQuantity} added to cart`);
+    showToast(`🛍️ ${product.name} (${selectedColor}) x${selectedQuantity} added to cart — Pkr ${discountedPrice}`);
   });
 }
 
@@ -293,7 +309,7 @@ function renderMoreProducts(currentProductId) {
             <h3 class="product-card__name">
               <a href="product.html?id=${encodeURIComponent(id)}" class="product-link">${product.name}</a>
             </h3>
-            <p class="product-card__price">Pkr ${product.price}</p>
+            <p class="product-card__price">${formatPriceWithDiscount(product.price)}</p>
           </div>
         </article>
       `;

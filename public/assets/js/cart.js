@@ -26,6 +26,7 @@
       id: item.id || item.name.toLowerCase().replace(/\s+/g, '-'),
       name: item.name,
       price: Number(item.price) || 0,
+      originalPrice: Number(item.originalPrice) || Number(item.price) || 0,
       color: item.color || 'Default',
       image: item.image || '',
       quantity: Math.min(MAX_ITEM_QUANTITY, Math.max(1, Number(item.quantity) || 1))
@@ -37,6 +38,7 @@
 
     if (existing) {
       existing.quantity = Math.min(MAX_ITEM_QUANTITY, existing.quantity + normalized.quantity);
+      existing.originalPrice = Number(existing.originalPrice) || normalized.originalPrice;
     } else {
       cart.push(normalized);
     }

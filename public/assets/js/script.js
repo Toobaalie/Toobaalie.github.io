@@ -1,4 +1,23 @@
 
+const SALE_DISCOUNT_PERCENT = 15;
+const SALE_MULTIPLIER = (100 - SALE_DISCOUNT_PERCENT) / 100;
+
+function getDiscountedPrice(originalPrice) {
+  const base = Number(originalPrice) || 0;
+  return Math.round(base * SALE_MULTIPLIER);
+}
+
+function inferOriginalPrice(discountedPrice) {
+  const sale = Number(discountedPrice) || 0;
+  return Math.round(sale / SALE_MULTIPLIER);
+}
+
+function formatPriceWithDiscount(originalPrice) {
+  const original = Number(originalPrice) || 0;
+  const discounted = getDiscountedPrice(original);
+  return `<span class="price-stack"><span class="price-sale">Pkr ${discounted}</span><span class="price-original">Pkr ${original}</span></span>`;
+}
+
 function updateCartBadge() {
   const badge = document.getElementById('cartBadge');
   if (!badge) return;
@@ -76,13 +95,16 @@ function getProductFromCard(card) {
   const nameEl = card.querySelector('.product-card__name a, .product-card__name');
   const priceEl = card.querySelector('.product-card__price');
   const imgEl = card.querySelector('.product-card__img-wrap img');
+  const originalFromData = Number(card.dataset.productOriginalPrice || 0);
 
   const priceMatch = (priceEl ? priceEl.textContent : '').match(/(\d+(?:\.\d+)?)/);
+  const original = originalFromData > 0 ? originalFromData : (priceMatch ? Number(priceMatch[1]) : 0);
 
   return {
     id,
     name: nameEl ? nameEl.textContent.trim() : 'Product',
-    price: priceMatch ? Number(priceMatch[1]) : 0,
+    price: getDiscountedPrice(original),
+    originalPrice: original,
     image: imgEl ? imgEl.getAttribute('src') || '' : ''
   };
 }
@@ -104,15 +126,16 @@ function renderWishlist() {
   }
 
   wishlistGrid.innerHTML = items
-    .map(
-      item => `
+    .map(item => {
+      const originalPrice = Number(item.originalPrice) || inferOriginalPrice(Number(item.price) || 0);
+      return `
         <article class="product-card" data-product-id="${item.id}">
           <div class="product-card__img-wrap">
             <a href="product.html?id=${encodeURIComponent(item.id)}" class="product-link">
               <img src="${item.image || 'images/1.jpeg'}" alt="${item.name}" />
             </a>
             <div class="product-card__actions">
-              <button class="add-cart-btn" onclick="addToCart('${item.name.replaceAll("'", "\\'")}', ${Number(item.price) || 149}, '${item.id}', 'Default', '${item.image || ''}')">
+              <button class="add-cart-btn" onclick="addToCart('${item.name.replaceAll("'", "\\'")}', ${originalPrice}, '${item.id}', 'Default', '${item.image || ''}')">
                 <i class="fas fa-shopping-bag"></i> Add to Cart
               </button>
               <button class="wish-btn wish-remove-btn" data-wishlist-remove="${item.id}"><i class="fas fa-heart"></i></button>
@@ -121,27 +144,30 @@ function renderWishlist() {
           <div class="product-card__info">
             <span class="product-card__cat">Wishlist</span>
             <h3 class="product-card__name"><a href="product.html?id=${encodeURIComponent(item.id)}" class="product-link">${item.name}</a></h3>
-            <p class="product-card__price">Pkr ${Number(item.price).toFixed(0)}</p>
+            <p class="product-card__price">${formatPriceWithDiscount(originalPrice)}</p>
           </div>
         </article>
-      `
-    )
+      `;
+    })
     .join('');
 }
 
 function addToCart(name, price, productId, color = 'Default', image = '') {
+  const originalPrice = Number(price) || 0;
+  const discountedPrice = getDiscountedPrice(originalPrice);
   if (window.CartStore) {
     window.CartStore.addItem({
       id: productId || name.toLowerCase().replace(/\s+/g, '-'),
       name,
-      price,
+      price: discountedPrice,
+      originalPrice,
       color,
       image,
       quantity: 1
     });
   }
   updateCartBadge();
-  showToast(`🛍️ ${name} (${color}) added to cart — Pkr ${price.toFixed(2)}`);
+  showToast(`🛍️ ${name} (${color}) added to cart — Pkr ${discountedPrice}`);
   
 }
 
@@ -475,20 +501,21 @@ function handleQuiz(e) {
   function renderCard({ id, category, title, displayCategory, price, image, badge, defaultColor }) {
     const safeName = title.replaceAll("'", "\\'");
     const safeColor = (defaultColor || 'Default').replaceAll("'", "\\'");
+    const originalPrice = Number(price) || 149;
     const url = defaultColor
       ? `product.html?id=${encodeURIComponent(id)}&color=${encodeURIComponent(defaultColor)}`
       : `product.html?id=${encodeURIComponent(id)}`;
     const badgeHtml = badge ? `<span class="product-card__badge">${badge}</span>` : '';
 
     return `
-      <div class="product-card" data-category="${category}" data-product-id="${id}" data-product-url="${url}">
+      <div class="product-card" data-category="${category}" data-product-id="${id}" data-product-url="${url}" data-product-original-price="${originalPrice}">
         <div class="product-card__img-wrap">
           <a href="${url}" class="product-link">
             <img src="${image}" alt="${title}" />
           </a>
           ${badgeHtml}
           <div class="product-card__actions">
-            <button class="add-cart-btn" onclick="addToCart('${safeName}', ${Number(price) || 149}, '${id}', '${safeColor}', '${image}')">
+            <button class="add-cart-btn" onclick="addToCart('${safeName}', ${originalPrice}, '${id}', '${safeColor}', '${image}')">
               <i class="fas fa-shopping-bag"></i> Add to Cart
             </button>
             <button class="wish-btn"><i class="far fa-heart"></i></button>
@@ -497,7 +524,7 @@ function handleQuiz(e) {
         <div class="product-card__info">
           <span class="product-card__cat">${displayCategory}</span>
           <h3 class="product-card__name"><a href="${url}" class="product-link">${title}</a></h3>
-          <p class="product-card__price">Pkr ${Number(price) || 149}</p>
+          <p class="product-card__price">${formatPriceWithDiscount(originalPrice)}</p>
         </div>
       </div>
     `;

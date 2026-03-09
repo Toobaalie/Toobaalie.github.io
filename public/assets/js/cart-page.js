@@ -2,6 +2,22 @@ function money(value) {
   return `Pkr ${Number(value).toFixed(0)}`;
 }
 
+const SALE_DISCOUNT_PERCENT = 15;
+const SALE_MULTIPLIER = (100 - SALE_DISCOUNT_PERCENT) / 100;
+
+function inferOriginalPrice(discountedPrice) {
+  const sale = Number(discountedPrice) || 0;
+  return Math.round(sale / SALE_MULTIPLIER);
+}
+
+function getOriginalUnitPrice(item) {
+  return Number(item.originalPrice) || inferOriginalPrice(item.price);
+}
+
+function formatPriceWithDiscount(originalPrice, discountedPrice) {
+  return `<span class="price-stack"><span class="price-sale">${money(discountedPrice)}</span><span class="price-original">${money(originalPrice)}</span></span>`;
+}
+
 const MAX_ITEM_QUANTITY = 10;
 
 const recommendationCatalog = {
@@ -98,7 +114,7 @@ function renderWishlist() {
         </a>
         <div class="cart-wishlist-card__info">
           <h3><a href="product.html?id=${encodeURIComponent(item.id)}">${item.name}</a></h3>
-          <p>${money(item.price || 0)}</p>
+          <p>${formatPriceWithDiscount(getOriginalUnitPrice(item), Number(item.price) || 0)}</p>
         </div>
         <div class="cart-wishlist-card__actions">
           <button class="btn btn--primary" data-wishlist-action="add">Add to Cart</button>
@@ -157,6 +173,7 @@ function renderCart() {
   cartContent.classList.remove('cart-content--empty');
 
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const originalTotal = items.reduce((sum, item) => sum + getOriginalUnitPrice(item) * item.quantity, 0);
 
   cartContent.innerHTML = `
     <div class="cart-list">
@@ -170,7 +187,7 @@ function renderCart() {
             <div class="cart-item__info">
               <h3>${item.name}</h3>
               <p>Color: ${item.color}</p>
-              <p>${money(item.price)}</p>
+              <p class="cart-item__price">${formatPriceWithDiscount(getOriginalUnitPrice(item), Number(item.price) || 0)}</p>
             </div>
             <div class="cart-item__actions">
               <div class="qty-control">
@@ -188,7 +205,7 @@ function renderCart() {
 
     <aside class="cart-summary">
       <h3>Order Summary</h3>
-      <p>Total: <strong>${money(total)}</strong></p>
+      <p>Total: <strong class="checkout-total__price">${formatPriceWithDiscount(originalTotal, total)}</strong></p>
       <a class="btn btn--primary" href="checkout.html">Checkout</a>
     </aside>
   `;
@@ -234,6 +251,7 @@ function handleWishlistAction(itemId, action) {
         id: item.id,
         name: item.name,
         price: Number(item.price) || 0,
+        originalPrice: Number(item.originalPrice) || getOriginalUnitPrice(item),
         color: 'Default',
         image: item.image || '',
         quantity: 1
