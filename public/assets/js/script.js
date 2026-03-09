@@ -456,14 +456,15 @@ function handleQuiz(e) {
     'satin-dream': 'Plain',
     'silk-bundle': 'Plain',
     'spring-bloom': 'Plain',
-    'pearl-trio-set': 'Bundles'
+    'pearl-trio-set': 'Bundles',
+    'plain-trio-set': 'Bundles'
   };
 
   function homeCategory(id, product) {
-    if (id === 'pearl-trio-set') {
+    const normalized = (product.category || '').toLowerCase();
+    if (normalized === 'bundles') {
       return 'bundles';
     }
-    const normalized = (product.category || '').toLowerCase();
     if (normalized === 'printed') {
       return 'printed';
     }
@@ -508,7 +509,7 @@ function handleQuiz(e) {
     const badge = badgeById[id] || '';
     const colors = Array.isArray(product.colors) ? product.colors.filter(Boolean) : [];
     const hasMultiColor = colors.length > 1;
-    const shouldExpandByColor = hasMultiColor && id !== 'pearl-trio-set';
+    const shouldExpandByColor = hasMultiColor && category !== 'bundles';
 
     // Expand any multi-color product into separate variant cards.
     if (shouldExpandByColor) {

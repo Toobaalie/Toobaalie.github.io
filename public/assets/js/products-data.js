@@ -134,6 +134,26 @@ window.BerryBabesProducts = {
 			"images/pearl grey.jpeg"
 		],
 		"reviews": []
+	},
+	"plain-trio-set": {
+		"name": "Plain Scrunchie Trio Set",
+		"category": "Bundles",
+		"price": 399,
+		"image": "images/Gemini_Generated_Image_wf46eqwf46eqwf46.png",
+		"description": "A versatile plain scrunchie trio designed for everyday styling and gifting.",
+		"colors": [
+			"Plain Trio"
+		],
+		"colorImages": {
+			"Plain Trio": "images/Gemini_Generated_Image_wf46eqwf46eqwf46.png"
+		},
+		"galleryImages": [
+			"images/Gemini_Generated_Image_wf46eqwf46eqwf46.png",
+			"images/black plain silk.jpeg",
+			"images/silk 4.jpeg",
+			"images/1.jpeg"
+		],
+		"reviews": []
 	}
 };
 
