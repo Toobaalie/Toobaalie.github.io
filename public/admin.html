@@ -37,14 +37,66 @@
     <div class="container">
       <div class="section__header">
         <span class="section__tag">Store Admin</span>
-        <h1 class="section__title">Products, Orders &amp; Subscribers</h1>
+        <h1 class="section__title">Complete Store Dashboard</h1>
       </div>
 
-      <section class="section__header admin-subscribers-header">
+      <section class="admin-overview" aria-label="Dashboard overview">
+        <article class="admin-stat-card">
+          <h3>Total Products</h3>
+          <p id="adminStatProducts">0</p>
+        </article>
+        <article class="admin-stat-card">
+          <h3>Total Orders</h3>
+          <p id="adminStatOrders">0</p>
+        </article>
+        <article class="admin-stat-card">
+          <h3>Total Revenue</h3>
+          <p id="adminStatRevenue">Pkr 0</p>
+        </article>
+        <article class="admin-stat-card">
+          <h3>Subscribers</h3>
+          <p id="adminStatSubscribers">0</p>
+        </article>
+        <article class="admin-stat-card">
+          <h3>Reviews</h3>
+          <p id="adminStatReviews">0</p>
+        </article>
+        <article class="admin-stat-card">
+          <h3>Pending Reviews</h3>
+          <p id="adminStatPendingReviews">0</p>
+        </article>
+      </section>
+
+      <section class="checkout-form-card admin-filters-card">
+        <h2>Quick Controls</h2>
+        <div class="admin-filters-row">
+          <input type="text" id="adminSearch" placeholder="Search products, orders, subscribers, reviews..." />
+          <select id="adminSectionFilter">
+            <option value="all">Show All Sections</option>
+            <option value="products">Products Only</option>
+            <option value="orders">Orders Only</option>
+            <option value="reviews">Reviews Only</option>
+            <option value="subscribers">Subscribers Only</option>
+          </select>
+          <select id="adminSortBy">
+            <option value="newest">Sort: Newest First</option>
+            <option value="oldest">Sort: Oldest First</option>
+            <option value="price-high">Products: Highest Price</option>
+            <option value="price-low">Products: Lowest Price</option>
+            <option value="amount-high">Orders: Highest Total</option>
+            <option value="amount-low">Orders: Lowest Total</option>
+            <option value="rating-high">Reviews: Highest Rating</option>
+          </select>
+          <button id="adminResetFilters" class="btn btn--primary" type="button">Reset Filters</button>
+          <button id="changeAdminKey" class="btn btn--primary" type="button">Change Admin Key</button>
+        </div>
+      </section>
+
+      <section class="section__header admin-subscribers-header" data-admin-section="products">
         <h2 class="section__title">Product Manager</h2>
       </section>
 
-      <section class="checkout-form-card admin-product-form-card">
+      <section class="checkout-form-card admin-product-form-card" data-admin-section="products">
         <h2>Add / Update Product</h2>
         <form id="productForm" class="checkout-form" novalidate>
           <input type="text" id="productId" placeholder="Product ID (auto for new product)" readonly />
@@ -70,29 +122,32 @@
         </form>
       </section>
 
-      <section id="adminProducts" class="admin-orders"></section>
+      <section id="adminProducts" class="admin-orders" data-admin-section="products"></section>
 
       <section class="admin-toolbar">
         <button id="refreshAdmin" class="btn btn--primary" type="button">Refresh</button>
+        <button id="exportProducts" class="btn btn--primary" type="button">Export Products CSV</button>
         <button id="exportOrders" class="btn btn--primary" type="button">Export Orders CSV</button>
+        <button id="exportReviews" class="btn btn--primary" type="button">Export Reviews CSV</button>
         <button id="exportSubscribers" class="btn btn--primary" type="button">Export Subscribers CSV</button>
+        <button id="approvePendingReviews" class="btn btn--primary" type="button">Approve Pending Reviews</button>
         <button id="clearOrders" class="btn btn--primary" type="button">Clear Orders</button>
         <button id="clearSubscribers" class="btn btn--primary" type="button">Clear Subscribers</button>
       </section>
 
       <p id="adminStatus" class="admin-status" aria-live="polite"></p>
 
-      <section id="adminOrders" class="admin-orders"></section>
+      <section id="adminOrders" class="admin-orders" data-admin-section="orders"></section>
 
-      <section class="section__header admin-subscribers-header">
+      <section class="section__header admin-subscribers-header" data-admin-section="reviews">
         <h2 class="section__title">Customer Reviews</h2>
       </section>
-      <section id="adminReviews" class="admin-orders"></section>
+      <section id="adminReviews" class="admin-orders" data-admin-section="reviews"></section>
 
-      <section class="section__header admin-subscribers-header">
+      <section class="section__header admin-subscribers-header" data-admin-section="subscribers">
         <h2 class="section__title">Subscribers</h2>
       </section>
-      <section id="adminSubscribers" class="admin-orders"></section>
+      <section id="adminSubscribers" class="admin-orders" data-admin-section="subscribers"></section>
     </div>
   </main>
 

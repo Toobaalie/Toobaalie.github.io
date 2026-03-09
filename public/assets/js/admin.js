@@ -372,6 +372,163 @@ function subscribersToCsvRows(subscribers) {
   return [header, ...body];
 }
 
+function productsToCsvRows(products) {
+  const header = ['id', 'name', 'category', 'price', 'image', 'description', 'colors', 'galleryImages'];
+  const body = Object.entries(products || {}).map(([id, product]) => [
+    id,
+    product.name,
+    product.category,
+    Number(product.price || 0),
+    product.image,
+    product.description,
+    Array.isArray(product.colors) ? product.colors.join(' | ') : '',
+    Array.isArray(product.galleryImages) ? product.galleryImages.join(' | ') : ''
+  ]);
+  return [header, ...body];
+}
+
+function reviewsToCsvRows(reviews) {
+  const header = ['id', 'productId', 'name', 'rating', 'review', 'approved', 'createdAt'];
+  const body = (reviews || []).map(review => [
+    review.id,
+    review.productId,
+    review.name,
+    Number(review.rating || 0),
+    review.review,
+    review.approved === false ? 'pending' : 'approved',
+    review.createdAt
+  ]);
+  return [header, ...body];
+}
+
+function normalizeText(value) {
+  return String(value || '').toLowerCase();
+}
+
+function toTimestamp(value) {
+  const ts = new Date(value || 0).getTime();
+  return Number.isFinite(ts) ? ts : 0;
+}
+
+function updateSectionVisibility(section) {
+  const blocks = document.querySelectorAll('[data-admin-section]');
+  blocks.forEach(block => {
+    const blockSection = block.getAttribute('data-admin-section');
+    const isVisible = section === 'all' || section === blockSection;
+    block.classList.toggle('is-hidden', !isVisible);
+  });
+}
+
+function updateOverviewStats(state) {
+  const productsCount = Object.keys(state.products || {}).length;
+  const ordersCount = (state.orders || []).length;
+  const subscribersCount = (state.subscribers || []).length;
+  const reviewsCount = (state.reviews || []).length;
+  const pendingReviewsCount = (state.reviews || []).filter(review => review.approved === false).length;
+  const revenue = (state.orders || []).reduce((sum, order) => sum + Number(order.total || 0), 0);
+
+  const productsEl = document.getElementById('adminStatProducts');
+  const ordersEl = document.getElementById('adminStatOrders');
+  const revenueEl = document.getElementById('adminStatRevenue');
+  const subscribersEl = document.getElementById('adminStatSubscribers');
+  const reviewsEl = document.getElementById('adminStatReviews');
+  const pendingEl = document.getElementById('adminStatPendingReviews');
+
+  if (productsEl) productsEl.textContent = String(productsCount);
+  if (ordersEl) ordersEl.textContent = String(ordersCount);
+  if (revenueEl) revenueEl.textContent = money(revenue);
+  if (subscribersEl) subscribersEl.textContent = String(subscribersCount);
+  if (reviewsEl) reviewsEl.textContent = String(reviewsCount);
+  if (pendingEl) pendingEl.textContent = String(pendingReviewsCount);
+}
+
+function applyDashboardFilters(state) {
+  const query = normalizeText(state.ui.search);
+  const sortBy = state.ui.sortBy;
+
+  const productEntries = Object.entries(state.products || {}).filter(([id, product]) => {
+    if (!query) return true;
+    const haystack = normalizeText([
+      id,
+      product.name,
+      product.category,
+      product.description,
+      Array.isArray(product.colors) ? product.colors.join(' ') : ''
+    ].join(' '));
+    return haystack.includes(query);
+  });
+
+  const filteredOrders = (state.orders || []).filter(order => {
+    if (!query) return true;
+    const itemNames = (order.items || []).map(item => item.name).join(' ');
+    const haystack = normalizeText([
+      order.id,
+      order.fullName,
+      order.phone,
+      order.email,
+      order.city,
+      order.address,
+      itemNames
+    ].join(' '));
+    return haystack.includes(query);
+  });
+
+  const filteredSubscribers = (state.subscribers || []).filter(subscriber => {
+    if (!query) return true;
+    return normalizeText(subscriber.email).includes(query);
+  });
+
+  const filteredReviews = (state.reviews || []).filter(review => {
+    if (!query) return true;
+    const haystack = normalizeText([
+      review.id,
+      review.name,
+      review.productId,
+      review.review
+    ].join(' '));
+    return haystack.includes(query);
+  });
+
+  if (sortBy === 'price-high') {
+    productEntries.sort((a, b) => Number(b[1].price || 0) - Number(a[1].price || 0));
+  } else if (sortBy === 'price-low') {
+    productEntries.sort((a, b) => Number(a[1].price || 0) - Number(b[1].price || 0));
+  } else if (sortBy === 'amount-high') {
+    filteredOrders.sort((a, b) => Number(b.total || 0) - Number(a.total || 0));
+  } else if (sortBy === 'amount-low') {
+    filteredOrders.sort((a, b) => Number(a.total || 0) - Number(b.total || 0));
+  } else if (sortBy === 'rating-high') {
+    filteredReviews.sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
+  } else if (sortBy === 'oldest') {
+    filteredOrders.sort((a, b) => toTimestamp(a.createdAt) - toTimestamp(b.createdAt));
+    filteredSubscribers.sort((a, b) => toTimestamp(a.createdAt) - toTimestamp(b.createdAt));
+    filteredReviews.sort((a, b) => toTimestamp(a.createdAt) - toTimestamp(b.createdAt));
+    productEntries.sort((a, b) => normalizeText(a[1].name).localeCompare(normalizeText(b[1].name)));
+  } else {
+    filteredOrders.sort((a, b) => toTimestamp(b.createdAt) - toTimestamp(a.createdAt));
+    filteredSubscribers.sort((a, b) => toTimestamp(b.createdAt) - toTimestamp(a.createdAt));
+    filteredReviews.sort((a, b) => toTimestamp(b.createdAt) - toTimestamp(a.createdAt));
+    productEntries.sort((a, b) => normalizeText(a[1].name).localeCompare(normalizeText(b[1].name)));
+  }
+
+  return {
+    productEntries,
+    orders: filteredOrders,
+    subscribers: filteredSubscribers,
+    reviews: filteredReviews
+  };
+}
+
+function renderDashboard(state) {
+  const filtered = applyDashboardFilters(state);
+  renderProducts(Object.fromEntries(filtered.productEntries));
+  renderOrders(filtered.orders);
+  renderSubscribers(filtered.subscribers);
+  renderReviews(filtered.reviews);
+  updateOverviewStats(state);
+  updateSectionVisibility(state.ui.section);
+}
+
 async function loadAdminData() {
   const [productsResponse, ordersResponse, subscribersResponse, reviewsResponse] = await Promise.all([
     adminFetch('/api/admin/products'),
@@ -393,10 +550,6 @@ async function loadAdminData() {
   const subscribers = subscribersPayload.subscribers || [];
   const reviews = reviewsPayload.reviews || [];
 
-  renderProducts(products);
-  renderOrders(orders);
-  renderSubscribers(subscribers);
-  renderReviews(reviews);
   return { products, orders, subscribers, reviews };
 }
 
@@ -469,7 +622,7 @@ async function clearCollection(endpoint, label) {
   return true;
 }
 
-function setupActions(getState, refreshData) {
+function setupActions(getState, refreshData, renderState) {
   const productForm = document.getElementById('productForm');
   const productsContainer = document.getElementById('adminProducts');
   const cancelEditButton = document.getElementById('cancelEditProductBtn');
@@ -478,6 +631,14 @@ function setupActions(getState, refreshData) {
   const exportSubscribersButton = document.getElementById('exportSubscribers');
   const clearOrdersButton = document.getElementById('clearOrders');
   const clearSubscribersButton = document.getElementById('clearSubscribers');
+  const exportProductsButton = document.getElementById('exportProducts');
+  const exportReviewsButton = document.getElementById('exportReviews');
+  const approvePendingReviewsButton = document.getElementById('approvePendingReviews');
+  const changeAdminKeyButton = document.getElementById('changeAdminKey');
+  const searchInput = document.getElementById('adminSearch');
+  const sectionFilterSelect = document.getElementById('adminSectionFilter');
+  const sortBySelect = document.getElementById('adminSortBy');
+  const resetFiltersButton = document.getElementById('adminResetFilters');
   const reviewsContainer = document.getElementById('adminReviews');
 
   setProductFormMode(false);
@@ -496,6 +657,7 @@ function setupActions(getState, refreshData) {
       try {
         await saveProductFromForm(productForm);
         await refreshData();
+        renderState();
         setStatus(editingId ? 'Product updated successfully.' : 'Product saved successfully.');
       } catch (error) {
         setStatus(error.message || 'Unable to save product.', true);
@@ -533,6 +695,7 @@ function setupActions(getState, refreshData) {
         const deleted = await deleteProduct(productId);
         if (!deleted) return;
         await refreshData();
+        renderState();
         setStatus('Product deleted.');
       } catch (error) {
         setStatus(error.message || 'Unable to delete product.', true);
@@ -544,10 +707,75 @@ function setupActions(getState, refreshData) {
     refreshButton.addEventListener('click', async () => {
       try {
         await refreshData();
+        renderState();
         setStatus('Admin data refreshed.');
       } catch {
         setStatus('Unable to refresh admin data.', true);
       }
+    });
+  }
+
+  if (changeAdminKeyButton) {
+    changeAdminKeyButton.addEventListener('click', async () => {
+      clearAdminApiKey();
+      const key = promptAdminApiKey();
+      if (!key) {
+        setStatus('Admin key update cancelled.', true);
+        return;
+      }
+      try {
+        await refreshData();
+        renderState();
+        setStatus('Admin key updated and data reloaded.');
+      } catch {
+        setStatus('New admin key is invalid or server unavailable.', true);
+      }
+    });
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      const state = getState();
+      state.ui.search = searchInput.value.trim();
+      renderState();
+    });
+  }
+
+  if (sectionFilterSelect) {
+    sectionFilterSelect.addEventListener('change', () => {
+      const state = getState();
+      state.ui.section = sectionFilterSelect.value;
+      renderState();
+    });
+  }
+
+  if (sortBySelect) {
+    sortBySelect.addEventListener('change', () => {
+      const state = getState();
+      state.ui.sortBy = sortBySelect.value;
+      renderState();
+    });
+  }
+
+  if (resetFiltersButton) {
+    resetFiltersButton.addEventListener('click', () => {
+      const state = getState();
+      state.ui.search = '';
+      state.ui.section = 'all';
+      state.ui.sortBy = 'newest';
+      if (searchInput) searchInput.value = '';
+      if (sectionFilterSelect) sectionFilterSelect.value = 'all';
+      if (sortBySelect) sortBySelect.value = 'newest';
+      renderState();
+      setStatus('Dashboard filters reset.');
+    });
+  }
+
+  if (exportProductsButton) {
+    exportProductsButton.addEventListener('click', () => {
+      const state = getState();
+      downloadCsv('products.csv', productsToCsvRows(state.products));
+      setStatus('Products CSV exported.');
     });
   }
 
@@ -567,12 +795,44 @@ function setupActions(getState, refreshData) {
     });
   }
 
+  if (exportReviewsButton) {
+    exportReviewsButton.addEventListener('click', () => {
+      const state = getState();
+      downloadCsv('reviews.csv', reviewsToCsvRows(state.reviews));
+      setStatus('Reviews CSV exported.');
+    });
+  }
+
+  if (approvePendingReviewsButton) {
+    approvePendingReviewsButton.addEventListener('click', async () => {
+      const state = getState();
+      const pending = state.reviews.filter(review => review.approved === false);
+      if (!pending.length) {
+        setStatus('No pending reviews to approve.');
+        return;
+      }
+
+      const shouldProceed = window.confirm(`Approve ${pending.length} pending review(s)?`);
+      if (!shouldProceed) return;
+
+      try {
+        await Promise.all(pending.map(review => moderateReview(review.id, true)));
+        await refreshData();
+        renderState();
+        setStatus(`Approved ${pending.length} review(s).`);
+      } catch {
+        setStatus('Unable to approve all pending reviews.', true);
+      }
+    });
+  }
+
   if (clearOrdersButton) {
     clearOrdersButton.addEventListener('click', async () => {
       try {
         const cleared = await clearCollection('/api/orders', 'orders');
         if (!cleared) return;
         await refreshData();
+        renderState();
         setStatus('Orders cleared.');
       } catch {
         setStatus('Unable to clear orders.', true);
@@ -586,6 +846,7 @@ function setupActions(getState, refreshData) {
         const cleared = await clearCollection('/api/subscribers', 'subscribers');
         if (!cleared) return;
         await refreshData();
+        renderState();
         setStatus('Subscribers cleared.');
       } catch {
         setStatus('Unable to clear subscribers.', true);
@@ -621,18 +882,18 @@ function setupActions(getState, refreshData) {
       // Optimistic UI update for instant feedback.
       targetReview.approved = approved;
       targetReview.moderatedAt = new Date().toISOString();
-      renderReviews(state.reviews);
+      renderState();
 
       try {
         const payload = await moderateReview(reviewId, approved);
         if (payload && payload.review) {
           state.reviews[reviewIndex] = payload.review;
         }
-        renderReviews(state.reviews);
+        renderState();
         setStatus(approved ? 'Review approved.' : 'Review hidden from storefront.');
       } catch {
         targetReview.approved = previousApproved;
-        renderReviews(state.reviews);
+        renderState();
         setStatus('Unable to update review status.', true);
       } finally {
         button.disabled = false;
@@ -647,7 +908,12 @@ function setupActions(getState, refreshData) {
     products: {},
     orders: [],
     subscribers: [],
-    reviews: []
+    reviews: [],
+    ui: {
+      search: '',
+      section: 'all',
+      sortBy: 'newest'
+    }
   };
 
   async function refreshData() {
@@ -658,9 +924,15 @@ function setupActions(getState, refreshData) {
     state.reviews = data.reviews;
   }
 
-  setupActions(() => state, refreshData);
+  function renderState() {
+    renderDashboard(state);
+  }
 
-  refreshData().catch(error => {
+  setupActions(() => state, refreshData, renderState);
+
+  refreshData().then(() => {
+    renderState();
+  }).catch(error => {
     const productsContainer = document.getElementById('adminProducts');
     const ordersContainer = document.getElementById('adminOrders');
     const subscribersContainer = document.getElementById('adminSubscribers');
