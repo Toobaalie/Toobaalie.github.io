@@ -275,7 +275,8 @@ function handleQuiz(e) {
     'pearl-collection': 0,
     'cotton-classic': 0,
     'satin-dream': 0,
-    'silk-bundle': 0
+    'silk-bundle': 0,
+    'pearl-trio-set': 0
   };
 
   if (vibe === 'soft') {
@@ -284,6 +285,7 @@ function handleQuiz(e) {
   } else if (vibe === 'bold') {
     score['silk-bundle'] += 3;
     score['pearl-collection'] += 2;
+    score['pearl-trio-set'] += 1;
   } else {
     score['cotton-classic'] += 3;
     score['silk-scrunchie'] += 1;
@@ -298,10 +300,12 @@ function handleQuiz(e) {
   } else {
     score['silk-bundle'] += 2;
     score['pearl-collection'] += 2;
+    score['pearl-trio-set'] += 1;
   }
 
   if (color === 'rose') {
     score['pearl-collection'] += 3;
+    score['pearl-trio-set'] += 1;
     score['silk-scrunchie'] += 1;
   } else if (color === 'neutral') {
     score['cotton-classic'] += 2;
@@ -318,7 +322,8 @@ function handleQuiz(e) {
     'pearl-collection': { name: 'Pearl Collection', note: 'Multiple pearl shades grouped in one card.' },
     'cotton-classic': { name: 'Printed Fabric Set', note: 'All printed variants are available in one product.' },
     'satin-dream': { name: 'Skin Satin Set', note: 'Soft satin texture with a clean, classic finish.' },
-    'silk-bundle': { name: 'Black Silk Scrunchie', note: 'Sleek black silk style that pairs with every look.' }
+    'silk-bundle': { name: 'Black Silk Scrunchie', note: 'Sleek black silk style that pairs with every look.' },
+    'pearl-trio-set': { name: 'The Pearl Trio Set', note: 'A curated 3-piece bundle for easy matching and gifting.' }
   };
 
   const match = productMeta[topProductId] || productMeta['silk-scrunchie'];
