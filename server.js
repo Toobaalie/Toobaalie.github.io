@@ -2,6 +2,8 @@ const express = require('express');
 const fs = require('fs');
 const crypto = require('crypto');
 const path = require('path');
+const http = require('http');
+const https = require('https');
 const nodemailer = require('nodemailer');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
@@ -26,6 +28,11 @@ const REPO_PRODUCTS_PATH = path.join(ROOT_DIR, 'data', 'products.json');
 const SMTP_FROM = process.env.SMTP_FROM || process.env.SMTP_USER || '';
 const SMTP_FROM_NAME = process.env.SMTP_FROM_NAME || 'BerryBabes Orders';
 const EMAIL_NOTIFICATIONS_ENABLED = false;
+const WHATSAPP_ALERT_ENABLED = String(process.env.WHATSAPP_ALERT_ENABLED || '').trim().toLowerCase() === 'true';
+const WHATSAPP_ACCESS_TOKEN = String(process.env.WHATSAPP_ACCESS_TOKEN || '').trim();
+const WHATSAPP_PHONE_NUMBER_ID = String(process.env.WHATSAPP_PHONE_NUMBER_ID || '').trim();
+const WHATSAPP_TO_NUMBER = String(process.env.WHATSAPP_TO_NUMBER || '').replace(/[^0-9]/g, '');
+const ORDER_ALERT_WEBHOOK_URL = String(process.env.ORDER_ALERT_WEBHOOK_URL || '').trim();
 const ADMIN_API_KEY = String(process.env.ADMIN_API_KEY || '').trim();
 const CORS_ALLOWED_ORIGINS = String(process.env.CORS_ALLOWED_ORIGINS || '').trim();
 const TRUST_PROXY = process.env.TRUST_PROXY ? process.env.TRUST_PROXY : '1';
@@ -393,6 +400,138 @@ async function sendEmailWithTimeout(payload, timeoutMs = 6000) {
   }
 }
 
+function postJsonWithTimeout(urlString, payload, headers = {}, timeoutMs = 6000) {
+  return new Promise((resolve, reject) => {
+    let parsed;
+    try {
+      parsed = new URL(urlString);
+    } catch {
+      reject(new Error('invalid_url'));
+      return;
+    }
+
+    const client = parsed.protocol === 'http:' ? http : https;
+    const body = JSON.stringify(payload);
+
+    const request = client.request(
+      {
+        protocol: parsed.protocol,
+        hostname: parsed.hostname,
+        port: parsed.port || undefined,
+        path: `${parsed.pathname}${parsed.search}`,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(body),
+          ...headers
+        }
+      },
+      response => {
+        const chunks = [];
+        response.on('data', chunk => chunks.push(chunk));
+        response.on('end', () => {
+          const statusCode = Number(response.statusCode || 0);
+          const text = Buffer.concat(chunks).toString('utf8');
+          resolve({ ok: statusCode >= 200 && statusCode < 300, statusCode, text });
+        });
+      }
+    );
+
+    request.on('error', error => reject(error));
+    request.setTimeout(timeoutMs, () => request.destroy(new Error('timeout')));
+    request.write(body);
+    request.end();
+  });
+}
+
+function buildOrderAlertText(order) {
+  const itemsText = (order.items || [])
+    .map(item => `${item.name} (${item.color}) x${item.quantity}`)
+    .join(', ');
+
+  return [
+    'New BerryBabes Order',
+    `Order: ${order.id}`,
+    `Customer: ${order.fullName}`,
+    `Phone: ${order.phone}`,
+    `City: ${order.city}`,
+    `Total: Pkr ${Number(order.total || 0).toFixed(0)}`,
+    `Items: ${itemsText || '-'}`,
+    `Time: ${order.createdAt}`
+  ].join('\n');
+}
+
+async function sendWhatsAppOrderAlert(order) {
+  const configured = WHATSAPP_ALERT_ENABLED && WHATSAPP_ACCESS_TOKEN && WHATSAPP_PHONE_NUMBER_ID && WHATSAPP_TO_NUMBER;
+  if (!configured) {
+    return { sent: false, status: 'whatsapp_not_configured' };
+  }
+
+  const endpoint = `https://graph.facebook.com/v20.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
+  const payload = {
+    messaging_product: 'whatsapp',
+    to: WHATSAPP_TO_NUMBER,
+    type: 'text',
+    text: {
+      preview_url: false,
+      body: buildOrderAlertText(order)
+    }
+  };
+
+  const response = await postJsonWithTimeout(
+    endpoint,
+    payload,
+    {
+      Authorization: `Bearer ${WHATSAPP_ACCESS_TOKEN}`
+    },
+    7000
+  );
+
+  return response.ok
+    ? { sent: true, status: 'whatsapp_sent' }
+    : { sent: false, status: `whatsapp_http_${response.statusCode || 0}` };
+}
+
+async function sendWebhookOrderAlert(order) {
+  if (!ORDER_ALERT_WEBHOOK_URL) {
+    return { sent: false, status: 'webhook_not_configured' };
+  }
+
+  const response = await postJsonWithTimeout(
+    ORDER_ALERT_WEBHOOK_URL,
+    {
+      event: 'order.created',
+      order
+    }
+  );
+
+  return response.ok
+    ? { sent: true, status: 'webhook_sent' }
+    : { sent: false, status: `webhook_http_${response.statusCode || 0}` };
+}
+
+async function sendOrderMobileAlert(order) {
+  const attempts = await Promise.allSettled([
+    sendWhatsAppOrderAlert(order),
+    sendWebhookOrderAlert(order)
+  ]);
+
+  const successful = attempts
+    .filter(result => result.status === 'fulfilled' && result.value && result.value.sent)
+    .map(result => result.value.status);
+
+  if (successful.length) {
+    return { sent: true, status: successful.join(',') };
+  }
+
+  const statuses = attempts
+    .map(result => (result.status === 'fulfilled' ? result.value.status : 'channel_error'))
+    .filter(Boolean)
+    .join(',');
+
+  return { sent: false, status: statuses || 'mobile_alert_not_configured' };
+}
+
 function readCustomerReviews() {
   ensureCustomerReviewsFile();
   const raw = fs.readFileSync(CUSTOMER_REVIEWS_PATH, 'utf8');
@@ -662,6 +801,7 @@ app.post('/api/orders', orderLimiter, async (req, res) => {
 
     await saveOrderStorage(order);
     const storageBackend = await getOrdersStorageBackend();
+    const mobileAlert = await sendOrderMobileAlert(order);
 
     let emailSent = false;
     let emailStatus = 'disabled';
@@ -694,6 +834,8 @@ app.post('/api/orders', orderLimiter, async (req, res) => {
       orderId: order.id,
       emailSent,
       emailStatus,
+      mobileAlertSent: mobileAlert.sent,
+      mobileAlertStatus: mobileAlert.status,
       storageBackend
     });
   } catch (error) {

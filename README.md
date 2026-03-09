@@ -67,6 +67,15 @@ SMTP_PORT=
 SMTP_USER=
 SMTP_PASS=
 SMTP_FROM=
+
+# Mobile order alerts (no Telegram)
+WHATSAPP_ALERT_ENABLED=true
+WHATSAPP_ACCESS_TOKEN=
+WHATSAPP_PHONE_NUMBER_ID=
+WHATSAPP_TO_NUMBER=
+
+# Optional fallback/custom integration endpoint
+ORDER_ALERT_WEBHOOK_URL=
 ```
 
 ## Deploy On Railway (Live Auto Update)
