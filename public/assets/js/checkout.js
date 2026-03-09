@@ -2,7 +2,7 @@ function money(value) {
   return `Pkr ${Number(value).toFixed(0)}`;
 }
 
-const SALE_DISCOUNT_PERCENT = 15;
+const SALE_DISCOUNT_PERCENT = 30;
 const SALE_MULTIPLIER = (100 - SALE_DISCOUNT_PERCENT) / 100;
 
 function inferOriginalPrice(discountedPrice) {

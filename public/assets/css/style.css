@@ -106,54 +106,30 @@ h1, h2, h3, h4, h5 { font-family: var(--font-serif); line-height: 1.2; }
   letter-spacing: 0.15em;
   text-transform: uppercase;
   font-weight: 300;
-  position: relative;
-  overflow: hidden;
-  min-height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 .announcement-bar strong { font-weight: 600; color: var(--rose-light); }
 
-.announcement-bar__line {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+.announcement-bar--sale-dynamic {
+  background: var(--rose-dark);
+  color: #fff;
+  overflow: hidden;
   white-space: nowrap;
-  opacity: 0;
-  animation: announcementTicker 8s ease-in-out infinite;
-}
-
-.announcement-bar__line--sale {
-  color: var(--rose-light);
+  letter-spacing: 0.14em;
   font-weight: 600;
-  animation-delay: 0s;
 }
 
-.announcement-bar__line--shipping {
-  animation-delay: 4s;
+.announcement-bar__marquee {
+  display: inline-block;
+  padding-left: 100%;
+  animation: saleMarquee 14s linear infinite;
 }
 
-@keyframes announcementTicker {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, 45%);
+@keyframes saleMarquee {
+  from {
+    transform: translateX(0);
   }
-  8% {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
-  42% {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
-  50% {
-    opacity: 0;
-    transform: translate(-50%, -45%);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -45%);
+  to {
+    transform: translateX(-100%);
   }
 }
 
@@ -2243,12 +2219,9 @@ h1, h2, h3, h4, h5 { font-family: var(--font-serif); line-height: 1.2; }
     font-size: 0.62rem;
     letter-spacing: 0.1em;
     padding: 0.45rem 0.75rem;
-    min-height: 1.75rem;
   }
-  .announcement-bar__line {
-    max-width: calc(100vw - 1.5rem);
-    overflow: hidden;
-    text-overflow: ellipsis;
+  .announcement-bar__marquee {
+    animation-duration: 12s;
   }
   .header__inner { height: 4.35rem; }
   .logo__name,
