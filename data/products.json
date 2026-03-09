@@ -115,7 +115,7 @@
 		"name": "The Pearl Trio Set",
 		"category": "Bundles",
 		"price": 399,
-		"image": "images/Gemini_Generated_Image_36k87136k87136k8.png",
+		"image": "images/trio.png",
 		"description": "Three elegant pearl scrunchies in classic shades for effortless everyday styling.",
 		"colors": [
 			"Pearl Black",
@@ -128,7 +128,7 @@
 			"Pearl Grey": "images/pearl grey.jpeg"
 		},
 		"galleryImages": [
-			"images/Gemini_Generated_Image_36k87136k87136k8.png",
+			"images/trio.png",
 			"images/pearl black.jpeg",
 			"images/pearl blue.jpeg",
 			"images/pearl grey.jpeg"

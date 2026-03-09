@@ -11,7 +11,7 @@ const recommendationCatalog = {
   'satin-dream': { id: 'satin-dream', name: 'Skin Satin Set', image: 'images/silk 4.jpeg', category: 'silk' },
   'silk-bundle': { id: 'silk-bundle', name: 'Black Silk Scrunchie', image: 'images/black plain silk.jpeg', category: 'silk' },
   'spring-bloom': { id: 'spring-bloom', name: 'Silk Navy Blue', image: 'images/1.jpeg', category: 'silk' },
-  'pearl-trio-set': { id: 'pearl-trio-set', name: 'The Pearl Trio Set', image: 'images/Gemini_Generated_Image_36k87136k87136k8.png', category: 'bundles' }
+  'pearl-trio-set': { id: 'pearl-trio-set', name: 'The Pearl Trio Set', image: 'images/trio.png', category: 'bundles' }
 };
 
 function getRecommendedProducts(items) {
