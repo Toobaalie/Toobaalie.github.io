@@ -154,6 +154,26 @@ window.BerryBabesProducts = {
 			"images/1.jpeg"
 		],
 		"reviews": []
+	},
+	"printed-trio-set": {
+		"name": "Printed Scrunchie Trio Set",
+		"category": "Bundles",
+		"price": 399,
+		"image": "images/print trio.png",
+		"description": "A playful printed trio set for statement looks and everyday comfort.",
+		"colors": [
+			"Printed Trio"
+		],
+		"colorImages": {
+			"Printed Trio": "images/print trio.png"
+		},
+		"galleryImages": [
+			"images/print trio.png",
+			"images/printed fabric.jpeg",
+			"images/printed fabric 2.jpeg",
+			"images/printed fabric 3.jpeg"
+		],
+		"reviews": []
 	}
 };
 

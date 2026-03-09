@@ -457,7 +457,8 @@ function handleQuiz(e) {
     'silk-bundle': 'Plain',
     'spring-bloom': 'Plain',
     'pearl-trio-set': 'Bundles',
-    'plain-trio-set': 'Bundles'
+    'plain-trio-set': 'Bundles',
+    'printed-trio-set': 'Bundles'
   };
 
   function homeCategory(id, product) {
